@@ -300,10 +300,6 @@ struct i2c_driver tmd2772_driver = {
 };
 
 
-
-
-
-
 // per-device data
 struct taos_data {
 	struct i2c_client *client;
@@ -340,7 +336,7 @@ struct taos_data {
 
 	bool phone_is_sleep;
 
-    int  light_percent;
+	int  light_percent;
 
 	bool prox_offset_cal_verify;
 	bool prox_calibrate_verify;
@@ -353,10 +349,10 @@ struct taos_data {
 	int  prox_data_max;
 	int  prox_manual_calibrate_threshold;
 	int  irq_pin_num;
-    int  prox_led_plus_cnt;
-    int  prox_offset_cal_ability;
-    int  prox_offset_cal_per_bit;
-    int  prox_uncover_data;
+	int  prox_led_plus_cnt;
+	int  prox_offset_cal_ability;
+	int  prox_offset_cal_per_bit;
+	int  prox_uncover_data;
 
 	char *chip_name;
 	struct regulator	*vdd;
@@ -452,686 +448,529 @@ static int taos_get_data(void);
 
 static void taos_irq_ops(bool enable, bool flag_sync)
 {
-    if (enable == taos_datap->irq_enabled)
-    {
-	SENSOR_LOG_INFO("doubule %s irq, retern here\n",enable? "enable" : "disable");
-	return;
-    }
-    else
-    {
-	taos_datap->irq_enabled  = enable;
-    }
-
-    if (enable)
-    {
-	enable_irq(taos_datap->client->irq);
-    }
-    else
-    {
-	if (flag_sync)
-	{
-	    disable_irq(taos_datap->client->irq);
-
+	if (enable == taos_datap->irq_enabled) {
+		SENSOR_LOG_INFO("doubule %s irq, retern here\n",enable? "enable" : "disable");
+		return;
+	} else {
+		taos_datap->irq_enabled  = enable;
 	}
-	else
-	{
-	    disable_irq_nosync(taos_datap->client->irq);
-	}
-    }
 
-    //SENSOR_LOG_INFO("%s irq \n",enable? "enable" : "disable");
+	if (enable) {
+		enable_irq(taos_datap->client->irq);
+	} else {
+		if (flag_sync) {
+			disable_irq(taos_datap->client->irq);
+		} else {
+			disable_irq_nosync(taos_datap->client->irq);
+		}
+	}
+
+	//SENSOR_LOG_INFO("%s irq \n",enable? "enable" : "disable");
 }
 
 
 static ssize_t attr_set_prox_led_pluse_cnt(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size)
-{
-    unsigned long val;
-    int ret;
-    SENSOR_LOG_ERROR("enter\n");
-    if (strict_strtoul(buf, 10, &val))
-    {
-	return -EINVAL;
-    }
-
-    prox_pulse_cnt_param = val;
-
-    if (NULL!=taos_cfgp)
-    {
-	taos_cfgp->prox_pulse_cnt = prox_pulse_cnt_param;
-	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x0E), taos_cfgp->prox_pulse_cnt))) < 0)
-	{
-	    SENSOR_LOG_ERROR("failed to write the prox_pulse_cnt reg\n");
+		struct device_attribute *attr,	const char *buf, size_t size) {
+	unsigned long val;
+	int ret;
+	SENSOR_LOG_ERROR("enter\n");
+	if (strict_strtoul(buf, 10, &val)) {
+		return -EINVAL;
 	}
-    }
-    else
-    {
-	SENSOR_LOG_ERROR("taos_cfgp is NULL\n");
-    }
 
-    SENSOR_LOG_ERROR("exit\n");
+	prox_pulse_cnt_param = val;
+
+	if (NULL!=taos_cfgp) {
+		taos_cfgp->prox_pulse_cnt = prox_pulse_cnt_param;
+		if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x0E), taos_cfgp->prox_pulse_cnt))) < 0) {
+			SENSOR_LOG_ERROR("failed to write the prox_pulse_cnt reg\n");
+		}
+	} else {
+		SENSOR_LOG_ERROR("taos_cfgp is NULL\n");
+	}
+
+	SENSOR_LOG_ERROR("exit\n");
 	return size;
 }
 
 static ssize_t attr_get_prox_led_pluse_cnt(struct device *dev,
-		struct device_attribute *attr,	char *buf)
-{
-    if (NULL!=taos_cfgp)
-    {
-	return sprintf(buf, "prox_led_pluse_cnt is %d\n", taos_cfgp->prox_pulse_cnt);
-    }
-    else
-    {
-	sprintf(buf, "taos_cfgp is NULL\n");
-    }
+		struct device_attribute *attr,	char *buf) {
+	if (NULL!=taos_cfgp) {
+		return sprintf(buf, "prox_led_pluse_cnt is %d\n", taos_cfgp->prox_pulse_cnt);
+	} else {
+		sprintf(buf, "taos_cfgp is NULL\n");
+	}
 	return strlen(buf);
 }
 
 static ssize_t attr_set_als_adc_time(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size)
-{
-    unsigned long val;
-    int ret;
-    SENSOR_LOG_ERROR("enter\n");
-    if (strict_strtoul(buf, 10, &val))
-    {
-	return -EINVAL;
-    }
-
-    prox_int_time_param = 255 - val;
-
-    if (NULL!=taos_cfgp)
-    {
-	taos_cfgp->prox_int_time = prox_int_time_param;
-	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x01), taos_cfgp->prox_int_time))) < 0)
-	{
-	    SENSOR_LOG_ERROR("failed to write the als_adc_time reg\n");
+		struct device_attribute *attr,	const char *buf, size_t size) {
+	unsigned long val;
+	int ret;
+	SENSOR_LOG_ERROR("enter\n");
+	if (strict_strtoul(buf, 10, &val)) {
+		return -EINVAL;
 	}
-    }
-    else
-    {
-	SENSOR_LOG_ERROR("taos_cfgp is NULL\n");
-    }
 
-    SENSOR_LOG_ERROR("exit\n");
+	prox_int_time_param = 255 - val;
+
+	if (NULL!=taos_cfgp) {
+		taos_cfgp->prox_int_time = prox_int_time_param;
+		if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x01), taos_cfgp->prox_int_time))) < 0) {
+			SENSOR_LOG_ERROR("failed to write the als_adc_time reg\n");
+		}
+	} else {
+		SENSOR_LOG_ERROR("taos_cfgp is NULL\n");
+	}
+
+	SENSOR_LOG_ERROR("exit\n");
 	return size;
 }
 
 static ssize_t attr_get_als_adc_time(struct device *dev,
-		struct device_attribute *attr,	char *buf)
-{
-    if (NULL!=taos_cfgp)
-    {
-	return sprintf(buf, "als_adc_time is 2.72 * %d ms\n", 255 - taos_cfgp->prox_int_time);
-    }
-    else
-    {
-	sprintf(buf, "taos_cfgp is NULL\n");
-    }
+		struct device_attribute *attr,	char *buf) {
+	if (NULL!=taos_cfgp) {
+		return sprintf(buf, "als_adc_time is 2.72 * %d ms\n", 255 - taos_cfgp->prox_int_time);
+	} else {
+		sprintf(buf, "taos_cfgp is NULL\n");
+	}
 	return strlen(buf);
 }
 
 static ssize_t attr_set_prox_adc_time(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size)
-{
-    unsigned long val;
-    int ret;
-    SENSOR_LOG_ERROR("enter\n");
-    if (strict_strtoul(buf, 10, &val))
-    {
-	return -EINVAL;
-    }
-
-    prox_adc_time_param = 255 - val;
-
-    if (NULL!=taos_cfgp)
-    {
-	taos_cfgp->prox_adc_time = prox_adc_time_param;
-	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x02), taos_cfgp->prox_adc_time))) < 0)
-	{
-	    SENSOR_LOG_ERROR("failed to write the prox_adc_time reg\n");
+		struct device_attribute *attr,	const char *buf, size_t size) {
+	unsigned long val;
+	int ret;
+	SENSOR_LOG_ERROR("enter\n");
+	if (strict_strtoul(buf, 10, &val)) {
+		return -EINVAL;
 	}
-    }
-    else
-    {
-	SENSOR_LOG_ERROR("taos_cfgp is NULL\n");
-    }
 
-    SENSOR_LOG_ERROR("exit\n");
+	prox_adc_time_param = 255 - val;
+
+	if (NULL!=taos_cfgp) {
+		taos_cfgp->prox_adc_time = prox_adc_time_param;
+		if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x02), taos_cfgp->prox_adc_time))) < 0) {
+			SENSOR_LOG_ERROR("failed to write the prox_adc_time reg\n");
+		}
+	} else {
+		SENSOR_LOG_ERROR("taos_cfgp is NULL\n");
+	}
+
+	SENSOR_LOG_ERROR("exit\n");
 	return size;
 }
 
 static ssize_t attr_get_prox_adc_time(struct device *dev,
-		struct device_attribute *attr,	char *buf)
-{
-    if (NULL!=taos_cfgp)
-    {
-	return sprintf(buf, "prox_adc_time is 2.72 * %d ms\n", 255 - taos_cfgp->prox_adc_time);
-    }
-    else
-    {
-	sprintf(buf, "taos_cfgp is NULL\n");
-    }
+		struct device_attribute *attr,	char *buf) {
+	if (NULL!=taos_cfgp) {
+		return sprintf(buf, "prox_adc_time is 2.72 * %d ms\n", 255 - taos_cfgp->prox_adc_time);
+	} else {
+		sprintf(buf, "taos_cfgp is NULL\n");
+	}
 	return strlen(buf);
 }
 
 static ssize_t attr_set_wait_time(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size)
-{
-    unsigned long val;
-    int ret;
-    SENSOR_LOG_ERROR("enter\n");
-    if (strict_strtoul(buf, 10, &val))
-    {
-	return -EINVAL;
-    }
-
-    prox_wait_time_param = 255 - val;
-
-    if (NULL!=taos_cfgp)
-    {
-	taos_cfgp->prox_wait_time = prox_wait_time_param;
-	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x03), taos_cfgp->prox_wait_time))) < 0)
-	{
-	    SENSOR_LOG_ERROR("failed to write the wait_time reg\n");
+		struct device_attribute *attr,	const char *buf, size_t size) {
+	unsigned long val;
+	int ret;
+	SENSOR_LOG_ERROR("enter\n");
+	if (strict_strtoul(buf, 10, &val)) {
+		return -EINVAL;
 	}
 
-    }
-    else
-    {
-	SENSOR_LOG_ERROR("taos_cfgp is NULL\n");
-    }
+	prox_wait_time_param = 255 - val;
 
-    SENSOR_LOG_ERROR("exit\n");
+	if (NULL!=taos_cfgp) {
+		taos_cfgp->prox_wait_time = prox_wait_time_param;
+		if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x03), taos_cfgp->prox_wait_time))) < 0) {
+			SENSOR_LOG_ERROR("failed to write the wait_time reg\n");
+		}
+
+	} else {
+		SENSOR_LOG_ERROR("taos_cfgp is NULL\n");
+	}
+
+	SENSOR_LOG_ERROR("exit\n");
 	return size;
 }
 
 static ssize_t attr_get_wait_time(struct device *dev,
-		struct device_attribute *attr,	char *buf)
-{
-    if (NULL!=taos_cfgp)
-    {
-	return sprintf(buf, "wait_time is 2.72 * %d ms\n", 255 - taos_cfgp->prox_wait_time);
-    }
-    else
-    {
-	sprintf(buf, "taos_cfgp is NULL\n");
-    }
+		struct device_attribute *attr,	char *buf) {
+	if (NULL!=taos_cfgp) {
+		return sprintf(buf, "wait_time is 2.72 * %d ms\n", 255 - taos_cfgp->prox_wait_time);
+	} else {
+		sprintf(buf, "taos_cfgp is NULL\n");
+	}
 	return strlen(buf);
 }
 
 static ssize_t attr_set_prox_led_strength_level(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size)
-{
-    unsigned long val;
-    int ret;
-    SENSOR_LOG_ERROR("enter\n");
-    if (strict_strtoul(buf, 10, &val))
-    {
-	return -EINVAL;
-    }
-
-    if (val>4 || val<=0)
-    {
-	SENSOR_LOG_ERROR("input error, please input a number 1~~4");
-    }
-    else
-    {
-	val = 4 - val;
-	prox_gain_param = (prox_gain_param & 0x3F) | (val<<6);
-
-	if (NULL!=taos_cfgp)
-	{
-	    taos_cfgp->prox_gain = prox_gain_param;
-	    if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x0F), taos_cfgp->prox_gain))) < 0)
-	    {
-		SENSOR_LOG_ERROR("failed to write the prox_led_strength reg\n");
-	    }
+		struct device_attribute *attr,	const char *buf, size_t size) {
+	unsigned long val;
+	int ret;
+	SENSOR_LOG_ERROR("enter\n");
+	if (strict_strtoul(buf, 10, &val)) {
+		return -EINVAL;
 	}
-	else
-	{
-	    SENSOR_LOG_ERROR("taos_cfgp is NULL\n");
-	}
-    }
 
-    SENSOR_LOG_ERROR("exit\n");
+	if (val>4 || val<=0) {
+		SENSOR_LOG_ERROR("input error, please input a number 1~~4");
+	} else {
+		val = 4 - val;
+		prox_gain_param = (prox_gain_param & 0x3F) | (val<<6);
+
+		if (NULL!=taos_cfgp) {
+			taos_cfgp->prox_gain = prox_gain_param;
+			if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x0F), taos_cfgp->prox_gain))) < 0) {
+				SENSOR_LOG_ERROR("failed to write the prox_led_strength reg\n");
+			}
+		} else {
+			SENSOR_LOG_ERROR("taos_cfgp is NULL\n");
+		}
+	}
+
+	SENSOR_LOG_ERROR("exit\n");
 	return size;
 }
 
 static ssize_t attr_get_prox_led_strength_level(struct device *dev,
-		struct device_attribute *attr,	char *buf)
-{
-    char *p_led_strength[4] = {"100", "50", "25", "12.5"};
-    if (NULL!=taos_cfgp)
-    {
-	return sprintf(buf, "prox_led_strength is %s mA\n", p_led_strength[(taos_cfgp->prox_gain) >> 6]);
-    }
-    else
-    {
-	sprintf(buf, "taos_cfgp is NULL\n");
-    }
+		struct device_attribute *attr,	char *buf) {
+	char *p_led_strength[4] = {"100", "50", "25", "12.5"};
+	if (NULL!=taos_cfgp) {
+		return sprintf(buf, "prox_led_strength is %s mA\n", p_led_strength[(taos_cfgp->prox_gain) >> 6]);
+	} else {
+		sprintf(buf, "taos_cfgp is NULL\n");
+	}
 	return strlen(buf);
 }
 
 
 static ssize_t attr_set_als_gain(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size)
-{
-    unsigned long val;
-    int ret;
-    SENSOR_LOG_ERROR("enter\n");
-    if (strict_strtoul(buf, 10, &val))
-    {
-	return -EINVAL;
-    }
-
-    if (val>4 || val<=0)
-    {
-	SENSOR_LOG_ERROR("input error, please input a number 1~~4");
-    }
-    else
-    {
-	val = val-1;
-	prox_gain_param = (prox_gain_param & 0xFC) | val;
-	gain_param      = prox_gain_param & 0x03;
-
-	if (NULL!=taos_cfgp)
-	{
-	    taos_cfgp->gain      = gain_param;
-	    taos_cfgp->prox_gain = prox_gain_param;
-	    if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x0F), taos_cfgp->prox_gain))) < 0)
-	    {
-		SENSOR_LOG_ERROR("failed to write the prox_led_strength reg\n");
-	    }
+		struct device_attribute *attr,	const char *buf, size_t size) {
+	unsigned long val;
+	int ret;
+	SENSOR_LOG_ERROR("enter\n");
+	if (strict_strtoul(buf, 10, &val)) {
+		return -EINVAL;
 	}
-	else
-	{
-	    SENSOR_LOG_ERROR("taos_cfgp is NULL\n");
+
+	if (val>4 || val<=0) {
+		SENSOR_LOG_ERROR("input error, please input a number 1~~4");
+	} else {
+		val = val-1;
+		prox_gain_param = (prox_gain_param & 0xFC) | val;
+		gain_param      = prox_gain_param & 0x03;
+
+		if (NULL!=taos_cfgp) {
+			taos_cfgp->gain      = gain_param;
+			taos_cfgp->prox_gain = prox_gain_param;
+			if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x0F), taos_cfgp->prox_gain))) < 0) {
+				SENSOR_LOG_ERROR("failed to write the prox_led_strength reg\n");
+			}
+		} else {
+			SENSOR_LOG_ERROR("taos_cfgp is NULL\n");
+		}
 	}
-    }
 
 
-    SENSOR_LOG_ERROR("exit\n");
+	SENSOR_LOG_ERROR("exit\n");
 	return size;
 }
 
 static ssize_t attr_get_als_gain(struct device *dev,
-		struct device_attribute *attr,	char *buf)
-{
-    u8 als_gain[4] = {1, 8, 16, 120};
-    if (NULL!=taos_cfgp)
-    {
-	return sprintf(buf, "als gain is x%d\n", als_gain[taos_cfgp->prox_gain & 0x03]);
-    }
-    else
-    {
-	sprintf(buf, "taos_cfgp is NULL\n");
-    }
+		struct device_attribute *attr,	char *buf) {
+	u8 als_gain[4] = {1, 8, 16, 120};
+	if (NULL!=taos_cfgp) {
+		return sprintf(buf, "als gain is x%d\n", als_gain[taos_cfgp->prox_gain & 0x03]);
+	} else {
+		sprintf(buf, "taos_cfgp is NULL\n");
+	}
 	return strlen(buf);
 }
 
 static ssize_t attr_set_prox_debug_delay(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size)
-{
-    unsigned long val;
-    SENSOR_LOG_ERROR("enter\n");
-    if (strict_strtoul(buf, 10, &val))
-    {
-	return -EINVAL;
-    }
+		struct device_attribute *attr,	const char *buf, size_t size) {
+	unsigned long val;
+	SENSOR_LOG_ERROR("enter\n");
+	if (strict_strtoul(buf, 10, &val)) {
+		return -EINVAL;
+	}
 
-    prox_debug_delay_time =  val;
+	prox_debug_delay_time =  val;
 
-    SENSOR_LOG_ERROR("exit\n");
+	SENSOR_LOG_ERROR("exit\n");
 	return size;
 }
 
 static ssize_t attr_get_prox_debug_delay(struct device *dev,
-		struct device_attribute *attr,	char *buf)
-{
-    if (NULL!=taos_cfgp)
-    {
-	return sprintf(buf, "prox_debug_delay_time is %d\n", prox_debug_delay_time);
-    }
-    else
-    {
-	sprintf(buf, "taos_cfgp is NULL\n");
-    }
+		struct device_attribute *attr,	char *buf) {
+	if (NULL!=taos_cfgp) {
+		return sprintf(buf, "prox_debug_delay_time is %d\n", prox_debug_delay_time);
+	} else {
+		sprintf(buf, "taos_cfgp is NULL\n");
+	}
 	return strlen(buf);
 }
 
 
 static ssize_t attr_prox_debug_store(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size)
-{
-    unsigned long val;
-    SENSOR_LOG_ERROR("enter\n");
-    if (strict_strtoul(buf, 10, &val))
-    {
-	return -EINVAL;
-    }
+		struct device_attribute *attr,	const char *buf, size_t size) {
+	unsigned long val;
+	SENSOR_LOG_ERROR("enter\n");
+	if (strict_strtoul(buf, 10, &val)) {
+		return -EINVAL;
+	}
 
-    if (val)
-    {
-	flag_prox_debug = true;
-    }
-    else
-    {
-	flag_prox_debug = false;
-    }
+	if (val) {
+		flag_prox_debug = true;
+	} else {
+		flag_prox_debug = false;
+	}
 
-    SENSOR_LOG_ERROR("exit\n");
+	SENSOR_LOG_ERROR("exit\n");
 	return size;
 }
 
 static ssize_t attr_prox_debug_show(struct device *dev,
-		struct device_attribute *attr,	char *buf)
-{
-    if (NULL!=taos_cfgp)
-    {
-	return sprintf(buf, "flag_prox_debug is %s\n", flag_prox_debug? "true" : "false");
-    }
-    else
-    {
-	sprintf(buf, "taos_cfgp is NULL\n");
-    }
+		struct device_attribute *attr,	char *buf) {
+	if (NULL!=taos_cfgp) {
+		return sprintf(buf, "flag_prox_debug is %s\n", flag_prox_debug? "true" : "false");
+	} else {
+		sprintf(buf, "taos_cfgp is NULL\n");
+	}
 	return strlen(buf);
 }
 
 static ssize_t attr_prox_calibrate_start_show(struct device *dev,
-		struct device_attribute *attr,	char *buf)
-{
-    if (NULL!=taos_cfgp)
-    {
-	return sprintf(buf, "flag_prox_calibrate_startis %s\n", flag_prox_debug? "true" : "false");
-    }
-    else
-    {
-	sprintf(buf, "taos_cfgp is NULL\n");
-    }
+		struct device_attribute *attr,	char *buf) {
+	if (NULL!=taos_cfgp) {
+		return sprintf(buf, "flag_prox_calibrate_startis %s\n", flag_prox_debug? "true" : "false");
+	} else {
+		sprintf(buf, "taos_cfgp is NULL\n");
+	}
 	return strlen(buf);
 }
 
 
 static ssize_t attr_prox_offset_cal_start_show(struct device *dev,
-		struct device_attribute *attr,	char *buf)
-{
-    if (NULL!=taos_cfgp)
-    {
-	return sprintf(buf, "flag_prox_offset_cal_startis %s\n", flag_prox_debug? "true" : "false");
-    }
-    else
-    {
-	sprintf(buf, "taos_cfgp is NULL\n");
-    }
+		struct device_attribute *attr,	char *buf) {
+	if (NULL!=taos_cfgp) {
+		return sprintf(buf, "flag_prox_offset_cal_startis %s\n", flag_prox_debug? "true" : "false");
+	} else {
+		sprintf(buf, "taos_cfgp is NULL\n");
+	}
 	return strlen(buf);
 }
 
 
 static ssize_t attr_prox_phone_is_sleep_store(struct device *dev, struct device_attribute *attr,
-					    const char *buf, size_t size)
-{
+					    const char *buf, size_t size) {
 	struct taos_data *chip = dev_get_drvdata(dev);
 	unsigned int recv;
-    int ret = kstrtouint(buf, 10, &recv);
-    if (ret)
-    {
-	SENSOR_LOG_ERROR("input error\n");
-	return -EINVAL;
-    }
+	int ret = kstrtouint(buf, 10, &recv);
+	if (ret) {
+		SENSOR_LOG_ERROR("input error\n");
+		return -EINVAL;
+	}
 
-    mutex_lock(&chip->lock);
-    if (recv==chip->phone_is_sleep)
-    {
-	SENSOR_LOG_INFO("double %s phone_is_sleep\n",recv? "enable" : "false");
-    }
-    else
-    {
-	chip->phone_is_sleep = recv;
-	SENSOR_LOG_INFO("success %s phone_is_sleep\n",recv? "enable" : "false");
-    }
-    mutex_unlock(&chip->lock);
+	mutex_lock(&chip->lock);
+	if (recv==chip->phone_is_sleep) {
+		SENSOR_LOG_INFO("double %s phone_is_sleep\n",recv? "enable" : "false");
+	} else {
+		chip->phone_is_sleep = recv;
+		SENSOR_LOG_INFO("success %s phone_is_sleep\n",recv? "enable" : "false");
+	}
+	mutex_unlock(&chip->lock);
 	return size;
 }
 
 static ssize_t attr_prox_phone_is_sleep_show(struct device *dev,
-	struct device_attribute *attr, char *buf)
-{
+	struct device_attribute *attr, char *buf) {
 	struct taos_data *chip = dev_get_drvdata(dev);
-    SENSOR_LOG_INFO("prox calibrate is %s\n",chip->phone_is_sleep? "true" : "false");
+	SENSOR_LOG_INFO("prox calibrate is %s\n",chip->phone_is_sleep? "true" : "false");
 	return snprintf(buf, PAGE_SIZE, "prox calibrate is %s\n\n", chip->phone_is_sleep? "true" : "false");
 }
 
 static ssize_t attr_prox_prox_wakelock_store(struct device *dev, struct device_attribute *attr,
-					    const char *buf, size_t size)
-{
+					    const char *buf, size_t size) {
 	struct taos_data *chip = dev_get_drvdata(dev);
 	unsigned int recv;
-    int ret = kstrtouint(buf, 10, &recv);
-    if (ret)
-    {
-	SENSOR_LOG_ERROR("input error\n");
-	return -EINVAL;
-    }
+	int ret = kstrtouint(buf, 10, &recv);
+	if (ret) {
+		SENSOR_LOG_ERROR("input error\n");
+		return -EINVAL;
+	}
 
-    mutex_lock(&chip->lock);
-    if (recv)
-    {
-	taos_wakelock_ops(&(chip->proximity_wakelock),true);
-    }
-    else
-    {
-	 //cancel_delayed_work_sync(&chip->prox_unwakelock_work);
-	hrtimer_cancel(&taos_datap->prox_unwakelock_timer);
-	taos_wakelock_ops(&(chip->proximity_wakelock),false);
-    }
-    mutex_unlock(&chip->lock);
+	mutex_lock(&chip->lock);
+	if (recv) {
+		taos_wakelock_ops(&(chip->proximity_wakelock),true);
+	} else {
+		//cancel_delayed_work_sync(&chip->prox_unwakelock_work);
+		hrtimer_cancel(&taos_datap->prox_unwakelock_timer);
+		taos_wakelock_ops(&(chip->proximity_wakelock),false);
+	}
+	mutex_unlock(&chip->lock);
 	return size;
 }
 
 static ssize_t attr_prox_prox_wakelock_show(struct device *dev,
-	struct device_attribute *attr, char *buf)
-{
+	struct device_attribute *attr, char *buf) {
 	struct taos_data *chip = dev_get_drvdata(dev);
-    SENSOR_LOG_INFO("proximity_wakelock is %s\n",chip->proximity_wakelock.locked ? "true" : "false");
+	SENSOR_LOG_INFO("proximity_wakelock is %s\n",chip->proximity_wakelock.locked ? "true" : "false");
 	return snprintf(buf, PAGE_SIZE, "proximity_wakelock is %s\n",chip->proximity_wakelock.locked ? "true" : "false");
 }
 
 
 //als
 static ssize_t attr_set_als_debug(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size)
-{
-    unsigned long val;
-    SENSOR_LOG_ERROR("enter\n");
-    if (strict_strtoul(buf, 10, &val))
-    {
-	return -EINVAL;
-    }
+		struct device_attribute *attr,	const char *buf, size_t size) {
+	unsigned long val;
+	SENSOR_LOG_ERROR("enter\n");
+	if (strict_strtoul(buf, 10, &val)) {
+		return -EINVAL;
+	}
 
-    if (val)
-    {
-	flag_als_debug = true;
-    }
-    else
-    {
-	flag_als_debug = false;
-    }
+	if (val) {
+		flag_als_debug = true;
+	} else {
+		flag_als_debug = false;
+	}
 
-    SENSOR_LOG_ERROR("exit\n");
+	SENSOR_LOG_ERROR("exit\n");
 	return size;
 }
 
 static ssize_t attr_get_als_debug(struct device *dev,
-		struct device_attribute *attr,	char *buf)
-{
-    if (NULL!=taos_cfgp)
-    {
-	return sprintf(buf, "flag_prox_debug is %s\n", flag_als_debug? "true" : "false");
-    }
-    else
-    {
-	sprintf(buf, "taos_cfgp is NULL\n");
-    }
+		struct device_attribute *attr,	char *buf) {
+	if (NULL!=taos_cfgp) {
+		return sprintf(buf, "flag_prox_debug is %s\n", flag_als_debug? "true" : "false");
+	} else {
+		sprintf(buf, "taos_cfgp is NULL\n");
+	}
 	return strlen(buf);
 }
 
 static ssize_t attr_set_irq(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size)
-{
-    unsigned long val;
-    SENSOR_LOG_ERROR("enter\n");
-    if (strict_strtoul(buf, 10, &val))
-    {
-	return -EINVAL;
-    }
+		struct device_attribute *attr,	const char *buf, size_t size) {
+	unsigned long val;
+	SENSOR_LOG_ERROR("enter\n");
+	if (strict_strtoul(buf, 10, &val)) {
+		return -EINVAL;
+	}
 
-    if (val)
-    {
-	taos_irq_ops(true, true);
-    }
-    else
-    {
-	taos_irq_ops(false, true);
-    }
+	if (val) {
+		taos_irq_ops(true, true);
+	} else {
+		taos_irq_ops(false, true);
+	}
 
-    SENSOR_LOG_ERROR("exit\n");
+	SENSOR_LOG_ERROR("exit\n");
 	return size;
 }
 
 static ssize_t attr_get_irq(struct device *dev,
-		struct device_attribute *attr,	char *buf)
-{
-    if (NULL!=taos_datap)
-    {
-	return sprintf(buf, "flag_irq is %s\n", taos_datap->irq_enabled? "true" : "false");
-    }
-    else
-    {
-	sprintf(buf, "taos_cfgp is NULL\n");
-    }
+		struct device_attribute *attr,	char *buf) {
+	if (NULL!=taos_datap) {
+		return sprintf(buf, "flag_irq is %s\n", taos_datap->irq_enabled? "true" : "false");
+	} else {
+		sprintf(buf, "taos_cfgp is NULL\n");
+	}
 	return strlen(buf);
 }
 
 
 static ssize_t attr_set_prox_calibrate(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size)
-{
-    int val,ret;
+		struct device_attribute *attr,	const char *buf, size_t size) {
+	int val,ret;
 
 	ret=kstrtouint(buf, 10, &val);
-    SENSOR_LOG_ERROR("enter\n");
-    if (ret<0)
-    {
-	return -EINVAL;
-    }
+	SENSOR_LOG_ERROR("enter\n");
+	if (ret<0) {
+		return -EINVAL;
+	}
 
-    if (val>1)
-    {
-     taos_datap->prox_calibrate_times= val;
-    taos_prox_calibrate();
-    }
-    else
-    {
-	SENSOR_LOG_ERROR("your input error, please input a number that bigger than 1\n");
-    }
+	if (val>1) {
+		taos_datap->prox_calibrate_times= val;
+		taos_prox_calibrate();
+	} else {
+		SENSOR_LOG_ERROR("your input error, please input a number that bigger than 1\n");
+	}
 
 	return size;
 }
 
 static ssize_t attr_prox_thres_high_store(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size)
-{
-    unsigned long val;
-    SENSOR_LOG_ERROR("enter\n");
-    if (strict_strtoul(buf, 10, &val))
-    {
-	return -EINVAL;
-    }
+		struct device_attribute *attr,	const char *buf, size_t size) {
+	unsigned long val;
+	SENSOR_LOG_ERROR("enter\n");
+	if (strict_strtoul(buf, 10, &val)) {
+		return -EINVAL;
+	}
 
-    if (val>0)
-    {
-	prox_calibrate_hi_param = val;
-    }
-    else
-    {
-	SENSOR_LOG_ERROR("you input error, please input a number that bigger than 0\n");
-    }
+	if (val>0) {
+		prox_calibrate_hi_param = val;
+	} else {
+		SENSOR_LOG_ERROR("you input error, please input a number that bigger than 0\n");
+	}
 
-    SENSOR_LOG_ERROR("exit\n");
+	SENSOR_LOG_ERROR("exit\n");
 	return size;
 }
 
 
 static ssize_t attr_prox_thres_high_show(struct device *dev,
-		struct device_attribute *attr,	char *buf)
-{
-    if (NULL!=taos_cfgp)
-    {
-	return sprintf(buf, "prox_calibrate_hi_param is %d\n",prox_calibrate_hi_param);
-    }
-    else
-    {
-	sprintf(buf, "taos_cfgp is NULL\n");
-    }
+		struct device_attribute *attr,	char *buf) {
+	if (NULL!=taos_cfgp) {
+		return sprintf(buf, "prox_calibrate_hi_param is %d\n",prox_calibrate_hi_param);
+	} else {
+		sprintf(buf, "taos_cfgp is NULL\n");
+	}
 	return strlen(buf);
 }
 
 static ssize_t attr_prox_thres_low_store(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size)
-{
-    unsigned long val;
-    SENSOR_LOG_ERROR("enter\n");
-    if (strict_strtoul(buf, 10, &val))
-    {
-	return -EINVAL;
-    }
+		struct device_attribute *attr,	const char *buf, size_t size) {
+	unsigned long val;
+	SENSOR_LOG_ERROR("enter\n");
+	if (strict_strtoul(buf, 10, &val)) {
+		return -EINVAL;
+	}
 
-    if (val>0)
-    {
-	prox_calibrate_lo_param = val;
-    }
-    else
-    {
-	SENSOR_LOG_ERROR("you input error, please input a number that bigger than 0\n");
-    }
+	if (val>0) {
+		prox_calibrate_lo_param = val;
+	} else {
+		SENSOR_LOG_ERROR("you input error, please input a number that bigger than 0\n");
+	}
 
-    SENSOR_LOG_ERROR("exit\n");
+	SENSOR_LOG_ERROR("exit\n");
 	return size;
 }
 
 
 static ssize_t attr_prox_thres_low_show(struct device *dev,
-		struct device_attribute *attr,	char *buf)
-{
-    if (NULL!=taos_cfgp)
-    {
-	return sprintf(buf, "prox_calibrate_lo_param is %d\n",prox_calibrate_lo_param);
-    }
-    else
-    {
-	sprintf(buf, "taos_cfgp is NULL\n");
-    }
+		struct device_attribute *attr,	char *buf) {
+	if (NULL!=taos_cfgp) {
+		return sprintf(buf, "prox_calibrate_lo_param is %d\n",prox_calibrate_lo_param);
+	} else {
+		sprintf(buf, "taos_cfgp is NULL\n");
+	}
 	return strlen(buf);
 }
 
 static ssize_t attr_prox_thres_show(struct device *dev,
-		struct device_attribute *attr,	char *buf)
-{
-    if (NULL!=taos_cfgp)
-    {
-	return sprintf(buf, "prox_calibrate_lo_param is %d\n prox_calibrate_hi_param is %d\n",taos_cfgp->prox_threshold_lo,taos_cfgp->prox_threshold_hi);
-    }
-    else
-    {
-	sprintf(buf, "taos_cfgp is NULL\n");
-    }
+		struct device_attribute *attr,	char *buf) {
+	if (NULL!=taos_cfgp) {
+		return sprintf(buf, "prox_calibrate_lo_param is %d\n prox_calibrate_hi_param is %d\n",taos_cfgp->prox_threshold_lo,taos_cfgp->prox_threshold_hi);
+	} else {
+		sprintf(buf, "taos_cfgp is NULL\n");
+	}
 	return strlen(buf);
 }
 static ssize_t attr_prox_thres_store(struct device *dev,
 				struct device_attribute *attr,
-				const char *buf, size_t size)
-{
+				const char *buf, size_t size) {
 	static long value;
 	int rc;
 
@@ -1140,35 +979,29 @@ static ssize_t attr_prox_thres_store(struct device *dev,
 		return -EINVAL;
 	mutex_lock(&taos_datap->lock);
 
-	if (value==1)
-    {
-		if( (rc=taos_read_cal_value(CAL_THRESHOLD))<0)
-	{
-	    mutex_unlock(&taos_datap->lock);
-	    return -EINVAL;
-	}
-		else
-		{
-		taos_datap->prox_calibrate_flag = false;
-		taos_datap->prox_manual_calibrate_threshold =rc;
-		taos_cfgp->prox_threshold_hi = rc;
+	if (value==1) {
+		if( (rc=taos_read_cal_value(CAL_THRESHOLD))<0) {
+			mutex_unlock(&taos_datap->lock);
+			return -EINVAL;
+		} else {
+			taos_datap->prox_calibrate_flag = false;
+			taos_datap->prox_manual_calibrate_threshold =rc;
+			taos_cfgp->prox_threshold_hi = rc;
 
-	    taos_cfgp->prox_threshold_hi = (taos_cfgp->prox_threshold_hi < taos_datap->prox_thres_hi_max) ? taos_cfgp->prox_threshold_hi : taos_datap->prox_thres_hi_max;
-	    taos_cfgp->prox_threshold_hi = (taos_cfgp->prox_threshold_hi > taos_datap->prox_thres_hi_min) ? taos_cfgp->prox_threshold_hi : taos_datap->prox_thres_hi_min;
+			taos_cfgp->prox_threshold_hi = (taos_cfgp->prox_threshold_hi < taos_datap->prox_thres_hi_max) ? taos_cfgp->prox_threshold_hi : taos_datap->prox_thres_hi_max;
+			taos_cfgp->prox_threshold_hi = (taos_cfgp->prox_threshold_hi > taos_datap->prox_thres_hi_min) ? taos_cfgp->prox_threshold_hi : taos_datap->prox_thres_hi_min;
 
-	    taos_cfgp->prox_threshold_lo = taos_cfgp->prox_threshold_hi - PROX_THRESHOLD_DISTANCE;
+			taos_cfgp->prox_threshold_lo = taos_cfgp->prox_threshold_hi - PROX_THRESHOLD_DISTANCE;
 
-	    taos_cfgp->prox_threshold_lo = (taos_cfgp->prox_threshold_lo < taos_datap->prox_thres_lo_max) ? taos_cfgp->prox_threshold_lo : taos_datap->prox_thres_lo_max;
-	    taos_cfgp->prox_threshold_lo = (taos_cfgp->prox_threshold_lo > taos_datap->prox_thres_lo_min) ? taos_cfgp->prox_threshold_lo : taos_datap->prox_thres_lo_min;
-		input_report_rel(taos_datap->p_idev, REL_Y, taos_cfgp->prox_threshold_hi);
-		input_report_rel(taos_datap->p_idev, REL_Z, taos_cfgp->prox_threshold_lo);
-		input_sync(taos_datap->p_idev);
-		SENSOR_LOG_ERROR("prox_th_high  = %d\n",taos_cfgp->prox_threshold_hi);
-		SENSOR_LOG_ERROR("prox_th_low   = %d\n",taos_cfgp->prox_threshold_lo);
+			taos_cfgp->prox_threshold_lo = (taos_cfgp->prox_threshold_lo < taos_datap->prox_thres_lo_max) ? taos_cfgp->prox_threshold_lo : taos_datap->prox_thres_lo_max;
+			taos_cfgp->prox_threshold_lo = (taos_cfgp->prox_threshold_lo > taos_datap->prox_thres_lo_min) ? taos_cfgp->prox_threshold_lo : taos_datap->prox_thres_lo_min;
+			input_report_rel(taos_datap->p_idev, REL_Y, taos_cfgp->prox_threshold_hi);
+			input_report_rel(taos_datap->p_idev, REL_Z, taos_cfgp->prox_threshold_lo);
+			input_sync(taos_datap->p_idev);
+			SENSOR_LOG_ERROR("prox_th_high  = %d\n",taos_cfgp->prox_threshold_hi);
+			SENSOR_LOG_ERROR("prox_th_low   = %d\n",taos_cfgp->prox_threshold_lo);
 		}
-	}
-	else
-    {
+	} else {
 		mutex_unlock(&taos_datap->lock);
 		return -EINVAL;
 	}
@@ -1178,468 +1011,357 @@ static ssize_t attr_prox_thres_store(struct device *dev,
 	return size;
 }
 static ssize_t attr_set_als_scale_factor_param_prox(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size)
-{
-    unsigned long val;
-    SENSOR_LOG_ERROR("enter\n");
-    if (strict_strtoul(buf, 10, &val))
-    {
-	return -EINVAL;
-    }
-
-    if (val>0)
-    {
-	scale_factor_param_prox = val;
-	if (NULL!=taos_cfgp)
-	{
-	    taos_cfgp->scale_factor_prox = scale_factor_param_prox;
+		struct device_attribute *attr,	const char *buf, size_t size) {
+	unsigned long val;
+	SENSOR_LOG_ERROR("enter\n");
+	if (strict_strtoul(buf, 10, &val)) {
+		return -EINVAL;
 	}
-	else
-	{
-	    SENSOR_LOG_ERROR("taos_cfgp is NULL\n");
-	}
-    }
-    else
-    {
-	SENSOR_LOG_ERROR("you input error, please input a number that bigger than 0\n");
-    }
 
-    SENSOR_LOG_ERROR("exit\n");
+	if (val>0) {
+		scale_factor_param_prox = val;
+		if (NULL!=taos_cfgp) {
+			taos_cfgp->scale_factor_prox = scale_factor_param_prox;
+		} else {
+			SENSOR_LOG_ERROR("taos_cfgp is NULL\n");
+		}
+	} else {
+		SENSOR_LOG_ERROR("you input error, please input a number that bigger than 0\n");
+	}
+
+	SENSOR_LOG_ERROR("exit\n");
 	return size;
 }
 
 
 static ssize_t attr_get_als_scale_factor_param_prox(struct device *dev,
-		struct device_attribute *attr,	char *buf)
-{
-    if (NULL!=taos_cfgp)
-    {
-	sprintf(buf, "als_scale_factor_param_prox is %d\n",taos_cfgp->scale_factor_prox);
-    }
-    else
-    {
-	sprintf(buf, "taos_cfgp is NULL\n");
-    }
+		struct device_attribute *attr,	char *buf) {
+	if (NULL!=taos_cfgp) {
+		sprintf(buf, "als_scale_factor_param_prox is %d\n",taos_cfgp->scale_factor_prox);
+	} else {
+		sprintf(buf, "taos_cfgp is NULL\n");
+	}
 	return strlen(buf);
 }
 
 static ssize_t attr_set_als_scale_factor_param_als(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size)
-{
-    unsigned long val;
-    SENSOR_LOG_ERROR("enter\n");
-    if (strict_strtoul(buf, 10, &val))
-    {
-	return -EINVAL;
-    }
-
-    if (val>0)
-    {
-	scale_factor_param_als = val;
-	if (NULL!=taos_cfgp)
-	{
-	    taos_cfgp->scale_factor_als = scale_factor_param_als;
+		struct device_attribute *attr,	const char *buf, size_t size) {
+	unsigned long val;
+	SENSOR_LOG_ERROR("enter\n");
+	if (strict_strtoul(buf, 10, &val)) {
+		return -EINVAL;
 	}
-	else
-	{
-	    SENSOR_LOG_ERROR("taos_cfgp is NULL\n");
+
+	if (val>0) {
+		scale_factor_param_als = val;
+		if (NULL!=taos_cfgp) {
+			taos_cfgp->scale_factor_als = scale_factor_param_als;
+		} else {
+			SENSOR_LOG_ERROR("taos_cfgp is NULL\n");
+		}
+	} else {
+		SENSOR_LOG_ERROR("you input error, please input a number that bigger than 0\n");
 	}
-    }
-    else
-    {
-	SENSOR_LOG_ERROR("you input error, please input a number that bigger than 0\n");
-    }
 
 
-    SENSOR_LOG_ERROR("exit\n");
+	SENSOR_LOG_ERROR("exit\n");
 	return size;
 }
 
 
 static ssize_t attr_get_als_scale_factor_param_als(struct device *dev,
-		struct device_attribute *attr,	char *buf)
-{
-    if (NULL!=taos_cfgp)
-    {
-	sprintf(buf, "als_scale_factor_param_als is %d\n",taos_cfgp->scale_factor_als);
-    }
-    else
-    {
-	sprintf(buf, "taos_cfgp is NULL\n");
-    }
+		struct device_attribute *attr,	char *buf) {
+	if (NULL!=taos_cfgp) {
+		sprintf(buf, "als_scale_factor_param_als is %d\n",taos_cfgp->scale_factor_als);
+	} else {
+		sprintf(buf, "taos_cfgp is NULL\n");
+	}
 	return strlen(buf);
 }
 
 
 static ssize_t attr_get_prox_threshold_high(struct device *dev,
-		struct device_attribute *attr,	char *buf)
-{
-    if (NULL!=taos_cfgp)
-    {
-	return sprintf(buf, "%d", taos_cfgp->prox_threshold_hi);
-    }
-    else
-    {
-	sprintf(buf, "taos_cfgp is NULL\n");
-    }
+		struct device_attribute *attr,	char *buf) {
+	if (NULL!=taos_cfgp) {
+		return sprintf(buf, "%d", taos_cfgp->prox_threshold_hi);
+	} else {
+		sprintf(buf, "taos_cfgp is NULL\n");
+	}
 	return strlen(buf);
 }
 
 static ssize_t attr_set_prox_threshold_high(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size)
-{
-    unsigned long val;
-    SENSOR_LOG_ERROR("enter\n");
-    if (strict_strtoul(buf, 10, &val))
-    {
-	return -EINVAL;
-    }
+		struct device_attribute *attr,	const char *buf, size_t size) {
+	unsigned long val;
+	SENSOR_LOG_ERROR("enter\n");
+	if (strict_strtoul(buf, 10, &val)) {
+		return -EINVAL;
+	}
 
-    if (NULL!=taos_cfgp)
-    {
-	taos_cfgp->prox_threshold_hi = val;
-    }
-    else
-    {
-	SENSOR_LOG_ERROR("taos_cfgp is NULL\n");
-    }
+	if (NULL!=taos_cfgp) {
+		taos_cfgp->prox_threshold_hi = val;
+	} else {
+		SENSOR_LOG_ERROR("taos_cfgp is NULL\n");
+	}
 
-    SENSOR_LOG_ERROR("exit\n");
+	SENSOR_LOG_ERROR("exit\n");
 	return size;
 }
 
 
 
 static ssize_t attr_get_prox_threshold_low(struct device *dev,
-		struct device_attribute *attr,	char *buf)
-{
-    if (NULL!=taos_cfgp)
-    {
-	return sprintf(buf, "%d", taos_cfgp->prox_threshold_lo);
-    }
-    else
-    {
-	sprintf(buf, "taos_cfgp is NULL\n");
-    }
+		struct device_attribute *attr,	char *buf) {
+	if (NULL!=taos_cfgp) {
+		return sprintf(buf, "%d", taos_cfgp->prox_threshold_lo);
+	} else {
+		sprintf(buf, "taos_cfgp is NULL\n");
+	}
 	return strlen(buf);
 }
 
 static ssize_t attr_set_prox_threshold_low(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size)
-{
-    unsigned long val;
-    SENSOR_LOG_ERROR("enter\n");
-    if (strict_strtoul(buf, 10, &val))
-    {
-	return -EINVAL;
-    }
+		struct device_attribute *attr,	const char *buf, size_t size) {
+	unsigned long val;
+	SENSOR_LOG_ERROR("enter\n");
+	if (strict_strtoul(buf, 10, &val)) {
+		return -EINVAL;
+	}
 
-    if (NULL!=taos_cfgp)
-    {
-	taos_cfgp->prox_threshold_lo = val;
-    }
-    else
-    {
-	SENSOR_LOG_ERROR("taos_cfgp is NULL\n");
-    }
+	if (NULL!=taos_cfgp) {
+		taos_cfgp->prox_threshold_lo = val;
+	} else {
+		SENSOR_LOG_ERROR("taos_cfgp is NULL\n");
+	}
 
-    SENSOR_LOG_ERROR("exit\n");
+	SENSOR_LOG_ERROR("exit\n");
 	return size;
 }
 
 
 static ssize_t attr_set_prox_offset(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size)
-{
-    unsigned long val;
-    int ret;
-    SENSOR_LOG_ERROR("enter\n");
-    if (strict_strtoul(buf, 10, &val))
-    {
-	return -EINVAL;
-    }
-
-    prox_config_offset_param = val;
-
-    if (NULL!=taos_cfgp)
-    {
-	taos_cfgp->prox_config_offset = prox_config_offset_param;
-	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x1E), taos_cfgp->prox_config_offset))) < 0)
-	{
-	    SENSOR_LOG_ERROR("failed to write the prox_config_offset  reg\n");
+		struct device_attribute *attr,	const char *buf, size_t size) {
+	unsigned long val;
+	int ret;
+	SENSOR_LOG_ERROR("enter\n");
+	if (strict_strtoul(buf, 10, &val)) {
+		return -EINVAL;
 	}
-    }
-    else
-    {
-	SENSOR_LOG_ERROR("taos_cfgp is NULL\n");
-    }
 
-    SENSOR_LOG_ERROR("exit\n");
+	prox_config_offset_param = val;
+
+	if (NULL!=taos_cfgp) {
+		taos_cfgp->prox_config_offset = prox_config_offset_param;
+		if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x1E), taos_cfgp->prox_config_offset))) < 0) {
+			SENSOR_LOG_ERROR("failed to write the prox_config_offset  reg\n");
+		}
+	} else {
+		SENSOR_LOG_ERROR("taos_cfgp is NULL\n");
+	}
+
+	SENSOR_LOG_ERROR("exit\n");
 	return size;
 }
 
 static ssize_t attr_get_prox_offset(struct device *dev,
-		struct device_attribute *attr,	char *buf)
-{
-    if (NULL!=taos_cfgp)
-    {
-	return sprintf(buf, "prox_config_offset_param is %d\n", taos_cfgp->prox_config_offset);
-    }
-    else
-    {
-	sprintf(buf, "taos_cfgp is NULL\n");
-    }
+		struct device_attribute *attr,	char *buf) {
+	if (NULL!=taos_cfgp) {
+		return sprintf(buf, "prox_config_offset_param is %d\n", taos_cfgp->prox_config_offset);
+	} else {
+		sprintf(buf, "taos_cfgp is NULL\n");
+	}
 	return strlen(buf);
 }
 
 static ssize_t attr_prox_calibrate_result_show(struct device *dev,
-		struct device_attribute *attr,	char *buf)
-{
-    if (NULL!=taos_datap)
-    {
-	return sprintf(buf, "%d", taos_datap->prox_calibrate_result);
-    }
-    else
-    {
-	sprintf(buf, "taos_cfgp is NULL\n");
-    }
+		struct device_attribute *attr,	char *buf) {
+	if (NULL!=taos_datap) {
+		return sprintf(buf, "%d", taos_datap->prox_calibrate_result);
+	} else {
+		sprintf(buf, "taos_cfgp is NULL\n");
+	}
 	return strlen(buf);
 }
 static ssize_t attr_prox_offset_cal_result_show(struct device *dev,
-		struct device_attribute *attr,	char *buf)
-{
-    if (NULL!=taos_datap)
-    {
-	return sprintf(buf, "%d", taos_datap->prox_offset_cal_result);
-    }
-    else
-    {
-	sprintf(buf, "taos_cfgp is NULL\n");
-    }
+		struct device_attribute *attr,	char *buf) {
+	if (NULL!=taos_datap) {
+		return sprintf(buf, "%d", taos_datap->prox_offset_cal_result);
+	} else {
+		sprintf(buf, "taos_cfgp is NULL\n");
+	}
 	return strlen(buf);
 }
 
 static ssize_t attr_prox_thres_hi_max(struct device *dev,
-		struct device_attribute *attr,	char *buf)
-{
-    if (NULL!=taos_datap)
-    {
-	    SENSOR_LOG_ERROR( "prox_thres_hi_max is %d\n",taos_datap->prox_thres_hi_max);
-	return sprintf(buf, "%d", PROX_THRESHOLD_HIGH_MAX);
-    }
-    else
-    {
-	sprintf(buf, "taos_cfgp is NULL\n");
-    }
+		struct device_attribute *attr,	char *buf) {
+	if (NULL!=taos_datap) {
+		SENSOR_LOG_ERROR( "prox_thres_hi_max is %d\n",taos_datap->prox_thres_hi_max);
+		return sprintf(buf, "%d", PROX_THRESHOLD_HIGH_MAX);
+	} else {
+		sprintf(buf, "taos_cfgp is NULL\n");
+	}
 	return strlen(buf);
 }
 
 
 static ssize_t attr_prox_thres_hi_min(struct device *dev,
-		struct device_attribute *attr,	char *buf)
-{
-    if (NULL!=taos_datap)
-    {
-	SENSOR_LOG_ERROR("prox_thres_hi_min is %d\n",taos_datap->prox_thres_hi_min);
-	return sprintf(buf, "%d", taos_datap->prox_thres_hi_min);
-    }
-    else
-    {
-	sprintf(buf, "taos_cfgp is NULL\n");
-    }
+		struct device_attribute *attr,	char *buf) {
+	if (NULL!=taos_datap) {
+		SENSOR_LOG_ERROR("prox_thres_hi_min is %d\n",taos_datap->prox_thres_hi_min);
+		return sprintf(buf, "%d", taos_datap->prox_thres_hi_min);
+	} else {
+		sprintf(buf, "taos_cfgp is NULL\n");
+	}
 	return strlen(buf);
 }
 
 static ssize_t attr_prox_data_safa_range_max_show(struct device *dev,
-		struct device_attribute *attr,	char *buf)
-{
-    if (NULL!=taos_datap)
-    {
-	    SENSOR_LOG_ERROR( "PROX_DATA_SAFE_RANGE_MAX is %d\n",PROX_DATA_SAFE_RANGE_MAX);
+		struct device_attribute *attr,	char *buf) {
+	if (NULL!=taos_datap) {
+		SENSOR_LOG_ERROR( "PROX_DATA_SAFE_RANGE_MAX is %d\n",PROX_DATA_SAFE_RANGE_MAX);
 
-	return sprintf(buf, "%d", PROX_DATA_SAFE_RANGE_MAX);
-    }
-    else
-    {
-	sprintf(buf, "taos_cfgp is NULL\n");
-    }
+		return sprintf(buf, "%d", PROX_DATA_SAFE_RANGE_MAX);
+	} else {
+		sprintf(buf, "taos_cfgp is NULL\n");
+	}
 	return strlen(buf);
 }
 
 
 static ssize_t attr_prox_data_safa_range_min_show(struct device *dev,
-		struct device_attribute *attr,	char *buf)
-{
-    if (NULL!=taos_datap)
-    {
+		struct device_attribute *attr,	char *buf) {
+	if (NULL!=taos_datap) {
 		SENSOR_LOG_ERROR("PROX_DATA_SAFE_RANGE_MIN is %d\n",PROX_DATA_SAFE_RANGE_MIN);
 
-	return sprintf(buf, "%d", PROX_DATA_SAFE_RANGE_MIN);
-    }
-    else
-    {
-	sprintf(buf, "taos_cfgp is NULL\n");
-    }
+		return sprintf(buf, "%d", PROX_DATA_SAFE_RANGE_MIN);
+	} else {
+		sprintf(buf, "taos_cfgp is NULL\n");
+	}
 	return strlen(buf);
 }
 static ssize_t attr_chip_name_show(struct device *dev,
-		struct device_attribute *attr,	char *buf)
-{
-    if (NULL!=taos_datap)
-    {
-	return sprintf(buf, "%s", taos_datap->chip_name);
-    }
-    else
-    {
-	sprintf(buf, "taos_cfgp is NULL\n");
-    }
+		struct device_attribute *attr,	char *buf) {
+	if (NULL!=taos_datap) {
+		return sprintf(buf, "%s", taos_datap->chip_name);
+	} else {
+		sprintf(buf, "taos_cfgp is NULL\n");
+	}
 	return strlen(buf);
 }
 
 
 static ssize_t attr_prox_data_max(struct device *dev,
-		struct device_attribute *attr,	char *buf)
-{
-    if (NULL!=taos_datap)
-    {
-	return sprintf(buf, "%d", taos_datap->prox_data_max);
-    }
-    else
-    {
-	sprintf(buf, "taos_cfgp is NULL\n");
-    }
+		struct device_attribute *attr,	char *buf) {
+	if (NULL!=taos_datap) {
+		return sprintf(buf, "%d", taos_datap->prox_data_max);
+	} else {
+		sprintf(buf, "taos_cfgp is NULL\n");
+	}
 	return strlen(buf);
 }
 
 static ssize_t attr_prox_manual_calibrate_threshold(struct device *dev,
-		struct device_attribute *attr,	char *buf)
-{
-    if (NULL!=taos_datap)
-    {
-	return sprintf(buf, "%d", taos_datap->prox_manual_calibrate_threshold);
-    }
-    else
-    {
-	sprintf(buf, "taos_cfgp is NULL\n");
-    }
+		struct device_attribute *attr,	char *buf) {
+	if (NULL!=taos_datap) {
+		return sprintf(buf, "%d", taos_datap->prox_manual_calibrate_threshold);
+	} else {
+		sprintf(buf, "taos_cfgp is NULL\n");
+	}
 	return strlen(buf);
 }
 
 static ssize_t attr_set_reg_addr(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size)
-{
-    unsigned long val;
-    SENSOR_LOG_ERROR("enter\n");
-    if (strict_strtoul(buf, 10, &val))
-    {
-	return -EINVAL;
-    }
+		struct device_attribute *attr,	const char *buf, size_t size) {
+	unsigned long val;
+	SENSOR_LOG_ERROR("enter\n");
+	if (strict_strtoul(buf, 10, &val)) {
+		return -EINVAL;
+	}
 
-    reg_addr = val;
+	reg_addr = val;
 
-    SENSOR_LOG_ERROR("exit\n");
+	SENSOR_LOG_ERROR("exit\n");
 	return size;
 }
 
 static ssize_t attr_get_reg_addr(struct device *dev,
-		struct device_attribute *attr,	char *buf)
-{
+		struct device_attribute *attr,	char *buf) {
 
-    SENSOR_LOG_ERROR("enter\n");
-    SENSOR_LOG_ERROR("reg_addr = 0x%02X\n",reg_addr);
+	SENSOR_LOG_ERROR("enter\n");
+	SENSOR_LOG_ERROR("reg_addr = 0x%02X\n",reg_addr);
 	return strlen(buf);
-    SENSOR_LOG_ERROR("exit\n");
+	SENSOR_LOG_ERROR("exit\n");
 
 }
 
 
 static ssize_t attr_set_reg_data(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size)
-{
-    unsigned long val;
-    int ret;
-    SENSOR_LOG_ERROR("enter\n");
-    if (strict_strtoul(buf, 10, &val))
-    {
-	return -EINVAL;
-    }
-
-    if (100==reg_addr)
-    {
-	SENSOR_LOG_ERROR("reg addr error!\n");
-    }
-    else
-    {
-	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|reg_addr), val))) < 0)
-	{
-	    SENSOR_LOG_ERROR("failed write reg\n");
+		struct device_attribute *attr,	const char *buf, size_t size) {
+	unsigned long val;
+	int ret;
+	SENSOR_LOG_ERROR("enter\n");
+	if (strict_strtoul(buf, 10, &val)) {
+		return -EINVAL;
 	}
-    }
 
-    SENSOR_LOG_ERROR("exit\n");
+	if (100==reg_addr) {
+		SENSOR_LOG_ERROR("reg addr error!\n");
+	} else {
+		if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|reg_addr), val))) < 0) {
+			SENSOR_LOG_ERROR("failed write reg\n");
+		}
+	}
+
+	SENSOR_LOG_ERROR("exit\n");
 	return size;
 }
 
 
 static ssize_t attr_get_reg_data(struct device *dev,
-		struct device_attribute *attr,	char *buf)
-{
-    unsigned char i;
-    if (100 == reg_addr)
-    {
-	for (i=0x00; i<=0x0F; i++)
-	{
-	    i2c_smbus_write_byte(taos_datap->client, (TAOS_TRITON_CMD_REG | i));
-	    SENSOR_LOG_ERROR("reg[0x%02X] = 0x%02X",i,i2c_smbus_read_byte(taos_datap->client));
-	}
-	for (i=0x11; i<=0x19; i++)
-	{
-	    i2c_smbus_write_byte(taos_datap->client, (TAOS_TRITON_CMD_REG | i));
-	    SENSOR_LOG_ERROR("reg[0x%02X] = 0x%02X",i,i2c_smbus_read_byte(taos_datap->client));
-	}
+		struct device_attribute *attr,	char *buf) {
+	unsigned char i;
+	if (100 == reg_addr) {
+		for (i=0x00; i<=0x0F; i++) {
+			i2c_smbus_write_byte(taos_datap->client, (TAOS_TRITON_CMD_REG | i));
+			SENSOR_LOG_ERROR("reg[0x%02X] = 0x%02X",i,i2c_smbus_read_byte(taos_datap->client));
+		}
+		for (i=0x11; i<=0x19; i++) {
+			i2c_smbus_write_byte(taos_datap->client, (TAOS_TRITON_CMD_REG | i));
+			SENSOR_LOG_ERROR("reg[0x%02X] = 0x%02X",i,i2c_smbus_read_byte(taos_datap->client));
+		}
 
-	i2c_smbus_write_byte(taos_datap->client, (TAOS_TRITON_CMD_REG | 0x1F));
-	SENSOR_LOG_ERROR("reg[0x1F] = 0x%02X",i2c_smbus_read_byte(taos_datap->client));
-    }
-    else
-    {
-	i2c_smbus_write_byte(taos_datap->client, (TAOS_TRITON_CMD_REG | reg_addr));
-	SENSOR_LOG_ERROR("reg[0x%02X] = 0x%02X",reg_addr,i2c_smbus_read_byte(taos_datap->client));
-    }
+		i2c_smbus_write_byte(taos_datap->client, (TAOS_TRITON_CMD_REG | 0x1F));
+		SENSOR_LOG_ERROR("reg[0x1F] = 0x%02X",i2c_smbus_read_byte(taos_datap->client));
+	} else {
+		i2c_smbus_write_byte(taos_datap->client, (TAOS_TRITON_CMD_REG | reg_addr));
+		SENSOR_LOG_ERROR("reg[0x%02X] = 0x%02X",reg_addr,i2c_smbus_read_byte(taos_datap->client));
+	}
 
 	return strlen(buf);
 }
 
 static ssize_t attr_get_prox_value(struct device *dev,
-		struct device_attribute *attr,	char *buf)
-{
-    if (NULL!=taos_cfgp)
-    {
-	SENSOR_LOG_ERROR("get_prox_value\n");
-	schedule_delayed_work(&taos_datap->prox_flush_work, msecs_to_jiffies(200));
-	    return sprintf(buf, "%d\n", last_proximity_data%100000);
-    }
-    else
-    {
-	sprintf(buf, "taos_cfgp is NULL\n");
-    }
+		struct device_attribute *attr,	char *buf) {
+	if (NULL!=taos_cfgp) {
+		SENSOR_LOG_ERROR("get_prox_value\n");
+		schedule_delayed_work(&taos_datap->prox_flush_work, msecs_to_jiffies(200));
+		return sprintf(buf, "%d\n", last_proximity_data%100000);
+	} else {
+		sprintf(buf, "taos_cfgp is NULL\n");
+	}
 	return strlen(buf);
 }
 
 static ssize_t attr_get_als_value(struct device *dev,
-		struct device_attribute *attr,	char *buf)
-{
-    if (NULL!=taos_cfgp)
-    {
-	SENSOR_LOG_ERROR("get_prox_value\n");
-	//taos_als_get_data();
-	schedule_delayed_work(&taos_datap->als_poll_work, msecs_to_jiffies(200));
-	return strlen(buf);
-    }
-    else
-    {
-	sprintf(buf, "taos_cfgp is NULL\n");
-    }
+		struct device_attribute *attr,	char *buf) {
+	if (NULL!=taos_cfgp) {
+		SENSOR_LOG_ERROR("get_prox_value\n");
+		//taos_als_get_data();
+		schedule_delayed_work(&taos_datap->als_poll_work, msecs_to_jiffies(200));
+		return strlen(buf);
+	} else {
+		sprintf(buf, "taos_cfgp is NULL\n");
+	}
 	return strlen(buf);
 }
 
@@ -1677,48 +1399,41 @@ static struct device_attribute attributes[] = {
 ///***************************************************************************************///
 //light
 static ssize_t attr_als_enable_show(struct device *dev,
-	struct device_attribute *attr, char *buf)
-{
+	struct device_attribute *attr, char *buf) {
 	struct taos_data *chip = dev_get_drvdata(dev);
 	return snprintf(buf, PAGE_SIZE, "%d\n", chip->als_on);
 }
 
 static ssize_t attr_als_enable_store(struct device *dev,
 				struct device_attribute *attr,
-				const char *buf, size_t size)
-{
+				const char *buf, size_t size) {
 	struct taos_data *chip = dev_get_drvdata(dev);
 	bool value;
 
 	if (strtobool(buf, &value))
 		return -EINVAL;
 
-    mutex_lock(&chip->lock);
+	mutex_lock(&chip->lock);
 
-	if (value)
-    {
-	taos_sensors_als_poll_on();
-    }
-    else
-    {
-	taos_sensors_als_poll_off();
-    }
+	if (value) {
+		taos_sensors_als_poll_on();
+	} else {
+		taos_sensors_als_poll_off();
+	}
 
-    mutex_unlock(&chip->lock);
+	mutex_unlock(&chip->lock);
 
 	return size;
 }
 
 static ssize_t attr_als_poll_time_show(struct device *dev,
-	struct device_attribute *attr, char *buf)
-{
+	struct device_attribute *attr, char *buf) {
 	return snprintf(buf, PAGE_SIZE, "als_poll_time = %d\n", als_poll_delay);
 }
 
 static ssize_t attr_als_poll_time_store(struct device *dev,
 				struct device_attribute *attr,
-				const char *buf, size_t size)
-{
+				const char *buf, size_t size) {
 	unsigned long time;
 	int rc;
 
@@ -1733,40 +1448,34 @@ static ssize_t attr_als_poll_time_store(struct device *dev,
 
 //prox
 static ssize_t attr_prox_enable_show(struct device *dev,
-	struct device_attribute *attr, char *buf)
-{
+	struct device_attribute *attr, char *buf) {
 	struct taos_data *chip = dev_get_drvdata(dev);
 	return snprintf(buf, PAGE_SIZE, "%d\n", chip->prox_on);
 }
 
 static ssize_t attr_prox_enable_store(struct device *dev,
 				struct device_attribute *attr,
-				const char *buf, size_t size)
-{
+				const char *buf, size_t size) {
 	struct taos_data *chip = dev_get_drvdata(dev);
 	bool value;
 	if (strtobool(buf, &value))
 		return -EINVAL;
-    mutex_lock(&chip->lock);
-    SENSOR_LOG_INFO("enter\n");
+	mutex_lock(&chip->lock);
+	SENSOR_LOG_INFO("enter\n");
 
-	if (value)
-    {
-	taos_prox_on();
-    }
-	else
-    {
-	taos_prox_off();
-    }
-    SENSOR_LOG_INFO("exit\n");
-    mutex_unlock(&chip->lock);
+	if (value) {
+		taos_prox_on();
+	} else {
+		taos_prox_off();
+	}
+	SENSOR_LOG_INFO("exit\n");
+	mutex_unlock(&chip->lock);
 
 	return size;
 }
 
 static ssize_t attr_prox_init_show(struct device *dev,
-	struct device_attribute *attr, char *buf)
-{
+	struct device_attribute *attr, char *buf) {
 	struct taos_data *chip = dev_get_drvdata(dev);
 	return sprintf(buf, "chip->init%d\n", chip->init);
 
@@ -1774,177 +1483,147 @@ static ssize_t attr_prox_init_show(struct device *dev,
 
 static ssize_t attr_prox_init_store(struct device *dev,
 				struct device_attribute *attr,
-				const char *buf, size_t size)
-{
+				const char *buf, size_t size) {
 	int value =1;
 	int ret =0,err=1;
 	ret = kstrtouint(buf, 10, &value);
 	if (ret)
 		return -EINVAL;
-    mutex_lock(&taos_datap->lock);
-    SENSOR_LOG_INFO("enter\n");
+	mutex_lock(&taos_datap->lock);
+	SENSOR_LOG_INFO("enter\n");
 
-	if (value ==1)
-    {
-	if((ret=taos_read_cal_value(PATH_PROX_OFFSET))>0)
-	{
-		    taos_cfgp->prox_config_offset = ret;
-	}
+	if (value ==1) {
+		if((ret=taos_read_cal_value(PATH_PROX_OFFSET))>0) {
+			taos_cfgp->prox_config_offset = ret;
+		}
 
-	if((ret=taos_read_cal_value(PATH_PROX_UNCOVER_DATA))>0)
-	{
-	   taos_datap->prox_uncover_data = ret;
-	   taos_datap->prox_thres_hi_min = taos_datap->prox_uncover_data + PROX_THRESHOLD_SAFE_DISTANCE;
-	    taos_datap->prox_thres_hi_max = taos_datap->prox_thres_hi_min + PROX_THRESHOLD_DISTANCE / 2;
-	    taos_datap->prox_thres_hi_max = (taos_datap->prox_thres_hi_max > PROX_THRESHOLD_HIGH_MAX) ? PROX_THRESHOLD_HIGH_MAX : taos_datap->prox_thres_hi_max;
-	    taos_datap->prox_thres_lo_min = taos_datap->prox_uncover_data + PROX_THRESHOLD_DISTANCE;
-	    taos_datap->prox_thres_lo_max = taos_datap->prox_uncover_data + PROX_THRESHOLD_DISTANCE * 2;
+		if((ret=taos_read_cal_value(PATH_PROX_UNCOVER_DATA))>0) {
+			taos_datap->prox_uncover_data = ret;
+			taos_datap->prox_thres_hi_min = taos_datap->prox_uncover_data + PROX_THRESHOLD_SAFE_DISTANCE;
+			taos_datap->prox_thres_hi_max = taos_datap->prox_thres_hi_min + PROX_THRESHOLD_DISTANCE / 2;
+			taos_datap->prox_thres_hi_max = (taos_datap->prox_thres_hi_max > PROX_THRESHOLD_HIGH_MAX) ? PROX_THRESHOLD_HIGH_MAX : taos_datap->prox_thres_hi_max;
+			taos_datap->prox_thres_lo_min = taos_datap->prox_uncover_data + PROX_THRESHOLD_DISTANCE;
+			taos_datap->prox_thres_lo_max = taos_datap->prox_uncover_data + PROX_THRESHOLD_DISTANCE * 2;
 
-	    SENSOR_LOG_ERROR("prox_uncover_data = %d\n", taos_datap->prox_uncover_data);
-	    SENSOR_LOG_ERROR("prox_thres_hi range is [%d--%d]\n", taos_datap->prox_thres_hi_min, taos_datap->prox_thres_hi_max);
-	    SENSOR_LOG_ERROR("prox_thres_lo range is [%d--%d]\n", taos_datap->prox_thres_lo_min, taos_datap->prox_thres_lo_max);
-	}
+			SENSOR_LOG_ERROR("prox_uncover_data = %d\n", taos_datap->prox_uncover_data);
+			SENSOR_LOG_ERROR("prox_thres_hi range is [%d--%d]\n", taos_datap->prox_thres_hi_min, taos_datap->prox_thres_hi_max);
+			SENSOR_LOG_ERROR("prox_thres_lo range is [%d--%d]\n", taos_datap->prox_thres_lo_min, taos_datap->prox_thres_lo_max);
+		}
 
-	if((ret=taos_read_cal_value(CAL_THRESHOLD))<0)
-		{
-		    SENSOR_LOG_ERROR("tmg399x_prox_init<0\n");
-		    err=taos_write_cal_file(CAL_THRESHOLD,0);
-			if(err<0)
-			{
+		if((ret=taos_read_cal_value(CAL_THRESHOLD))<0) {
+			SENSOR_LOG_ERROR("tmg399x_prox_init<0\n");
+			err=taos_write_cal_file(CAL_THRESHOLD,0);
+			if(err<0) {
 				SENSOR_LOG_ERROR("ERROR=%s\n",CAL_THRESHOLD);
 				mutex_unlock(&taos_datap->lock);
 				return -EINVAL;
 			}
-		taos_datap->prox_calibrate_flag = true;
-		}
-		else
-	{
-	    if (ret==0)
-	    {
-		taos_datap->prox_calibrate_flag = true;
-		SENSOR_LOG_ERROR("taos_prox_calibrate==1\n");
-		}
-		else
-	    {
-		taos_datap->prox_calibrate_flag = false;
-		taos_datap->prox_manual_calibrate_threshold =ret;
-		taos_cfgp->prox_threshold_hi = ret;
+			taos_datap->prox_calibrate_flag = true;
+		} else {
+			if (ret==0) {
+				taos_datap->prox_calibrate_flag = true;
+				SENSOR_LOG_ERROR("taos_prox_calibrate==1\n");
+			} else {
+				taos_datap->prox_calibrate_flag = false;
+				taos_datap->prox_manual_calibrate_threshold =ret;
+				taos_cfgp->prox_threshold_hi = ret;
 
-		taos_cfgp->prox_threshold_hi = (taos_cfgp->prox_threshold_hi < taos_datap->prox_thres_hi_max) ? taos_cfgp->prox_threshold_hi : taos_datap->prox_thres_hi_max;
-		taos_cfgp->prox_threshold_hi = (taos_cfgp->prox_threshold_hi > taos_datap->prox_thres_hi_min) ? taos_cfgp->prox_threshold_hi : taos_datap->prox_thres_hi_min;
-		taos_cfgp->prox_threshold_lo = taos_cfgp->prox_threshold_hi - PROX_THRESHOLD_DISTANCE;
-		taos_cfgp->prox_threshold_lo = (taos_cfgp->prox_threshold_lo < taos_datap->prox_thres_lo_max) ? taos_cfgp->prox_threshold_lo : taos_datap->prox_thres_lo_max;
-		taos_cfgp->prox_threshold_lo = (taos_cfgp->prox_threshold_lo > taos_datap->prox_thres_lo_min) ? taos_cfgp->prox_threshold_lo : taos_datap->prox_thres_lo_min;
-		input_report_rel(taos_datap->p_idev, REL_Y, taos_cfgp->prox_threshold_hi);
-		input_report_rel(taos_datap->p_idev, REL_Z, taos_cfgp->prox_threshold_lo);
-		input_sync(taos_datap->p_idev);
-		SENSOR_LOG_ERROR("taos_prox_init> 0\n");
+				taos_cfgp->prox_threshold_hi = (taos_cfgp->prox_threshold_hi < taos_datap->prox_thres_hi_max) ? taos_cfgp->prox_threshold_hi : taos_datap->prox_thres_hi_max;
+				taos_cfgp->prox_threshold_hi = (taos_cfgp->prox_threshold_hi > taos_datap->prox_thres_hi_min) ? taos_cfgp->prox_threshold_hi : taos_datap->prox_thres_hi_min;
+				taos_cfgp->prox_threshold_lo = taos_cfgp->prox_threshold_hi - PROX_THRESHOLD_DISTANCE;
+				taos_cfgp->prox_threshold_lo = (taos_cfgp->prox_threshold_lo < taos_datap->prox_thres_lo_max) ? taos_cfgp->prox_threshold_lo : taos_datap->prox_thres_lo_max;
+				taos_cfgp->prox_threshold_lo = (taos_cfgp->prox_threshold_lo > taos_datap->prox_thres_lo_min) ? taos_cfgp->prox_threshold_lo : taos_datap->prox_thres_lo_min;
+				input_report_rel(taos_datap->p_idev, REL_Y, taos_cfgp->prox_threshold_hi);
+				input_report_rel(taos_datap->p_idev, REL_Z, taos_cfgp->prox_threshold_lo);
+				input_sync(taos_datap->p_idev);
+				SENSOR_LOG_ERROR("taos_prox_init> 0\n");
+			}
 		}
-	}
-	}
-	else
-    {
+	} else {
 		SENSOR_LOG_ERROR("ERROR=tmg399x_prox_init_store\n");
 		mutex_unlock(&taos_datap->lock);
 		return -EINVAL;
 	}
 
-    SENSOR_LOG_INFO("prox_threshold_hi = %d, prox_threshold_lo = %d\n",taos_cfgp->prox_threshold_hi,taos_cfgp->prox_threshold_lo);
+	SENSOR_LOG_INFO("prox_threshold_hi = %d, prox_threshold_lo = %d\n",taos_cfgp->prox_threshold_hi,taos_cfgp->prox_threshold_lo);
 
-    SENSOR_LOG_INFO("exit\n");
-    mutex_unlock(&taos_datap->lock);
+	SENSOR_LOG_INFO("exit\n");
+	mutex_unlock(&taos_datap->lock);
 
 	return size;
 }
 
 static ssize_t attr_prox_offset_cal_store(struct device *dev,
 				struct device_attribute *attr,
-				const char *buf, size_t size)
-{
+				const char *buf, size_t size) {
 	int value =1;
 	int ret =0;
 	ret = kstrtouint(buf, 10, &value);
-	if (ret)
-	{
+	if (ret) {
 		return -EINVAL;
 	}
-		mutex_lock(&taos_datap->lock);
-		SENSOR_LOG_INFO("enter\n");
+	mutex_lock(&taos_datap->lock);
+	SENSOR_LOG_INFO("enter\n");
 
-	if (value ==1)
-      {
-	     schedule_delayed_work(&taos_datap->prox_offset_cal_work, msecs_to_jiffies(0));
-	     mutex_unlock(&taos_datap->lock);
-	}
-	else
-      {
-	     SENSOR_LOG_ERROR("input error\n");
-	mutex_unlock(&taos_datap->lock);
+	if (value ==1) {
+		schedule_delayed_work(&taos_datap->prox_offset_cal_work, msecs_to_jiffies(0));
+		mutex_unlock(&taos_datap->lock);
+	} else {
+		SENSOR_LOG_ERROR("input error\n");
+		mutex_unlock(&taos_datap->lock);
 		return -EINVAL;
-      }
-		SENSOR_LOG_INFO("exit\n");
-		return size;
+	}
+	SENSOR_LOG_INFO("exit\n");
+	return size;
 }
 
 static ssize_t attr_prox_offset_cal_verify_show(struct device *dev,
-		struct device_attribute *attr,	char *buf)
-{
-    if (NULL != taos_datap)
-    {
-	return sprintf(buf, "%d", taos_datap->prox_offset_cal_verify);
-    }
-    else
-    {
-	sprintf(buf, "taos_datap is NULL\n");
-    }
+		struct device_attribute *attr,	char *buf) {
+	if (NULL != taos_datap) {
+		return sprintf(buf, "%d", taos_datap->prox_offset_cal_verify);
+	} else {
+		sprintf(buf, "taos_datap is NULL\n");
+	}
 	return strlen(buf);
 }
 
 static ssize_t attr_prox_offset_cal_verify_store(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size)
-{
-    unsigned long val = 0;
+		struct device_attribute *attr,	const char *buf, size_t size) {
+	unsigned long val = 0;
 
-    SENSOR_LOG_ERROR("enter\n");
-    if (strict_strtoul(buf, 10, &val))
-    {
-	return -EINVAL;
-    }
+	SENSOR_LOG_ERROR("enter\n");
+	if (strict_strtoul(buf, 10, &val)) {
+		return -EINVAL;
+	}
 
 	taos_datap->prox_offset_cal_verify = val;
 
-    SENSOR_LOG_ERROR("exit\n");
+	SENSOR_LOG_ERROR("exit\n");
 	return size;
 }
 
 static ssize_t attr_prox_calibrate_verify_show(struct device *dev,
-		struct device_attribute *attr,	char *buf)
-{
-    if (NULL != taos_datap)
-    {
-	return sprintf(buf, "%d", taos_datap->prox_calibrate_verify);
-    }
-    else
-    {
-	sprintf(buf, "taos_datap is NULL\n");
-    }
+		struct device_attribute *attr,	char *buf) {
+	if (NULL != taos_datap) {
+		return sprintf(buf, "%d", taos_datap->prox_calibrate_verify);
+	} else {
+		sprintf(buf, "taos_datap is NULL\n");
+	}
 	return strlen(buf);
 }
 
 static ssize_t attr_prox_calibrate_verify_store(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size)
-{
-    unsigned long val = 0;
+		struct device_attribute *attr,	const char *buf, size_t size) {
+	unsigned long val = 0;
 
-    SENSOR_LOG_ERROR("enter\n");
-    if (strict_strtoul(buf, 10, &val))
-    {
-	return -EINVAL;
-    }
+	SENSOR_LOG_ERROR("enter\n");
+	if (strict_strtoul(buf, 10, &val)) {
+		return -EINVAL;
+	}
 
 	taos_datap->prox_calibrate_verify = val;
 
-    SENSOR_LOG_ERROR("exit\n");
+	SENSOR_LOG_ERROR("exit\n");
 	return size;
 }
 
@@ -1990,11 +1669,11 @@ static struct device_attribute attrs_prox[] = {
     __ATTR(reg_data,                       0644,   attr_get_reg_data,                          attr_set_reg_data),
     __ATTR(irq_status,                     0644,   attr_get_irq,                               attr_set_irq),
     __ATTR(wait_time,                      0644,   attr_get_wait_time,                         attr_set_wait_time),
-    __ATTR(prox_offset_cal_start,           0640,   attr_prox_offset_cal_start_show,     attr_prox_debug_store),
-    __ATTR(prox_offset_cal,                 0640,   attr_get_prox_offset,           attr_prox_offset_cal_store),
-    __ATTR(prox_offset_cal_result,          0640,   attr_prox_offset_cal_result_show,            NULL),
-    __ATTR(prox_data_safe_range_max,        0644,   attr_prox_data_safa_range_max_show,  NULL),
-    __ATTR(prox_data_safe_range_min,        0644,   attr_prox_data_safa_range_min_show,  NULL),
+    __ATTR(prox_offset_cal_start,          0640,   attr_prox_offset_cal_start_show,     attr_prox_debug_store),
+    __ATTR(prox_offset_cal,                0640,   attr_get_prox_offset,           attr_prox_offset_cal_store),
+    __ATTR(prox_offset_cal_result,         0640,   attr_prox_offset_cal_result_show,            NULL),
+    __ATTR(prox_data_safe_range_max,       0644,   attr_prox_data_safa_range_max_show,  NULL),
+    __ATTR(prox_data_safe_range_min,       0644,   attr_prox_data_safa_range_min_show,  NULL),
     __ATTR(prox_offset_cal_verify,         0644,   attr_prox_offset_cal_verify_show,     attr_prox_offset_cal_verify_store),
     __ATTR(prox_calibrate_verify,          0644,   attr_prox_calibrate_verify_show,      attr_prox_calibrate_verify_store),
 };
@@ -2034,394 +1713,349 @@ error:
 
 static void taos_wakelock_ops(struct taos_wake_lock *wakelock, bool enable)
 {
-    if (enable == wakelock->locked)
-    {
-	SENSOR_LOG_INFO("doubule %s %s, retern here\n",enable? "lock" : "unlock",wakelock->name);
-	return;
-    }
+	if (enable == wakelock->locked) {
+		SENSOR_LOG_INFO("doubule %s %s, retern here\n",enable? "lock" : "unlock",wakelock->name);
+		return;
+	}
 
-    if (enable)
-    {
-	wake_lock(&wakelock->lock);
-    }
-    else
-    {
-	wake_unlock(&wakelock->lock);
-    }
+	if (enable) {
+		wake_lock(&wakelock->lock);
+	} else {
+		wake_unlock(&wakelock->lock);
+	}
 
-    wakelock->locked = enable;
+	wakelock->locked = enable;
 
-    SENSOR_LOG_INFO("%s %s \n",enable? "lock" : "unlock",wakelock->name);
+	SENSOR_LOG_INFO("%s %s \n",enable? "lock" : "unlock",wakelock->name);
 }
 
 static int taos_write_cal_file(char *file_path,unsigned int value)
 {
-    struct file *file_p;
-    char write_buf[10];
-	 mm_segment_t old_fs;
-    int vfs_write_retval=0;
-    if (NULL==file_path)
-    {
-	SENSOR_LOG_ERROR("file_path is NULL\n");
+	struct file *file_p;
+	char write_buf[10];
+	mm_segment_t old_fs;
+	int vfs_write_retval=0;
+	if (NULL==file_path) {
+		SENSOR_LOG_ERROR("file_path is NULL\n");
 
-    }
-       memset(write_buf, 0, sizeof(write_buf));
-      sprintf(write_buf, "%d\n", value);
-    file_p = filp_open(file_path, O_CREAT|O_RDWR , 0665);
-    if (IS_ERR(file_p))
-    {
-	SENSOR_LOG_ERROR("[open file <%s>failed]\n",file_path);
-	goto error;
-    }
-    old_fs = get_fs();
-    set_fs(KERNEL_DS);
+	}
+	memset(write_buf, 0, sizeof(write_buf));
+	sprintf(write_buf, "%d\n", value);
+	file_p = filp_open(file_path, O_CREAT|O_RDWR , 0665);
+	if (IS_ERR(file_p)) {
+		SENSOR_LOG_ERROR("[open file <%s>failed]\n",file_path);
+		goto error;
+	}
+	old_fs = get_fs();
+	set_fs(KERNEL_DS);
 
-    vfs_write_retval = vfs_write(file_p, (char*)write_buf, sizeof(write_buf), &file_p->f_pos);
-    if (vfs_write_retval < 0)
-    {
-	SENSOR_LOG_ERROR("[write file <%s>failed]\n",file_path);
-	goto error;
-    }
+	vfs_write_retval = vfs_write(file_p, (char*)write_buf, sizeof(write_buf), &file_p->f_pos);
+	if (vfs_write_retval < 0) {
+		SENSOR_LOG_ERROR("[write file <%s>failed]\n",file_path);
+		goto error;
+	}
 
-    set_fs(old_fs);
-    filp_close(file_p, NULL);
+	set_fs(old_fs);
+	filp_close(file_p, NULL);
 
 
-    return 1;
+	return 1;
 
 error:
-    return -1;
+	return -1;
 }
 
 
 static int taos_read_cal_value(char *file_path)
 {
-    struct file *file_p;
-    int vfs_read_retval = 0;
-    mm_segment_t old_fs;
-    char read_buf[32];
-    unsigned short read_value;
+	struct file *file_p;
+	int vfs_read_retval = 0;
+	mm_segment_t old_fs;
+	char read_buf[32];
+	unsigned short read_value;
 
-    if (NULL==file_path)
-    {
-	SENSOR_LOG_ERROR("file_path is NULL\n");
-	goto error;
-    }
+	if (NULL==file_path) {
+		SENSOR_LOG_ERROR("file_path is NULL\n");
+		goto error;
+	}
 
-    memset(read_buf, 0, 32);
+	memset(read_buf, 0, 32);
 
-    file_p = filp_open(file_path, O_RDONLY , 0);
-    if (IS_ERR(file_p))
-    {
-	SENSOR_LOG_ERROR("[open file <%s>failed]\n",file_path);
-	goto error;
-    }
+	file_p = filp_open(file_path, O_RDONLY , 0);
+	if (IS_ERR(file_p)) {
+		SENSOR_LOG_ERROR("[open file <%s>failed]\n",file_path);
+		goto error;
+	}
 
-    old_fs = get_fs();
-    set_fs(KERNEL_DS);
+	old_fs = get_fs();
+	set_fs(KERNEL_DS);
 
-    vfs_read_retval = vfs_read(file_p, (char*)read_buf, 16, &file_p->f_pos);
-    if (vfs_read_retval < 0)
-    {
-	SENSOR_LOG_ERROR("[read file <%s>failed]\n",file_path);
-	goto error;
-    }
+	vfs_read_retval = vfs_read(file_p, (char*)read_buf, 16, &file_p->f_pos);
+	if (vfs_read_retval < 0) {
+		SENSOR_LOG_ERROR("[read file <%s>failed]\n",file_path);
+		goto error;
+	}
 
-    set_fs(old_fs);
-    filp_close(file_p, NULL);
+	set_fs(old_fs);
+	filp_close(file_p, NULL);
 
-    if (kstrtou16(read_buf, 10, &read_value) < 0)
-    {
-	SENSOR_LOG_ERROR("[kstrtou16 %s failed]\n",read_buf);
-	goto error;
-    }
+	if (kstrtou16(read_buf, 10, &read_value) < 0) {
+		SENSOR_LOG_ERROR("[kstrtou16 %s failed]\n",read_buf);
+		goto error;
+	}
 
-    SENSOR_LOG_ERROR("[the content of %s is %s]\n", file_path, read_buf);
+	SENSOR_LOG_ERROR("[the content of %s is %s]\n", file_path, read_buf);
 
-    return read_value;
+	return read_value;
 
 error:
-    return -1;
+	return -1;
 }
 
 static void taos_irq_work_func(struct work_struct * work) //iVIZM
 {
-    int retry_times = 0;
-    int ret;
-    mutex_lock(&taos_datap->lock);
-    SENSOR_LOG_INFO("enter\n");
-    if (wakeup_from_sleep)
-    {
-	SENSOR_LOG_INFO(" wakeup_from_sleep = true\n");
-	mdelay(50);
-	wakeup_from_sleep = false;
-    }
-
-    for (retry_times=0; retry_times<=50; retry_times++)
-    {
-	ret = taos_get_data();
-	if (ret >= 0)
-	{
-	    break;
+	int retry_times = 0;
+	int ret;
+	mutex_lock(&taos_datap->lock);
+	SENSOR_LOG_INFO("enter\n");
+	if (wakeup_from_sleep) {
+		SENSOR_LOG_INFO(" wakeup_from_sleep = true\n");
+		mdelay(50);
+		wakeup_from_sleep = false;
 	}
-	mdelay(20);
-    }
-    taos_interrupts_clear();
 
-    hrtimer_cancel(&taos_datap->prox_unwakelock_timer);
-    taos_datap->irq_work_status = false;
-   // SENSOR_LOG_INFO("########  taos_irq_work_func enter   hrtimer_start #########\n");
-    hrtimer_start(&taos_datap->prox_unwakelock_timer, ktime_set(3, 0), HRTIMER_MODE_REL);
+	for (retry_times=0; retry_times<=50; retry_times++) {
+		ret = taos_get_data();
+		if (ret >= 0) {
+			break;
+		}
+		mdelay(20);
+	}
+	taos_interrupts_clear();
 
-   //  schedule_delayed_work(&taos_datap->prox_unwakelock_work, msecs_to_jiffies(1000));
+	hrtimer_cancel(&taos_datap->prox_unwakelock_timer);
+	taos_datap->irq_work_status = false;
+// SENSOR_LOG_INFO("########  taos_irq_work_func enter   hrtimer_start #########\n");
+	hrtimer_start(&taos_datap->prox_unwakelock_timer, ktime_set(3, 0), HRTIMER_MODE_REL);
 
-    taos_irq_ops(true, true);
-    SENSOR_LOG_INFO(" retry_times = %d\n",retry_times);
-    mutex_unlock(&taos_datap->lock);
+//  schedule_delayed_work(&taos_datap->prox_unwakelock_work, msecs_to_jiffies(1000));
+
+	taos_irq_ops(true, true);
+	SENSOR_LOG_INFO(" retry_times = %d\n",retry_times);
+	mutex_unlock(&taos_datap->lock);
 }
 
 static void taos_flush_work_func(struct work_struct * work) //iVIZM
 {
-    taos_prox_threshold_set();
+	taos_prox_threshold_set();
 }
 static irqreturn_t taos_irq_handler(int irq, void *dev_id) //iVIZM
 {
-    SENSOR_LOG_INFO("enter\n");
-    taos_datap->irq_work_status = true;
-    taos_irq_ops(false, false);
-    taos_wakelock_ops(&(taos_datap->proximity_wakelock), true);
-    if (0==queue_work(taos_datap->irq_work_queue, &taos_datap->irq_work))
-    {
-	SENSOR_LOG_INFO("schedule_work failed!\n");
-    }
-    SENSOR_LOG_INFO("exit\n");
-    return IRQ_HANDLED;
+	SENSOR_LOG_INFO("enter\n");
+	taos_datap->irq_work_status = true;
+	taos_irq_ops(false, false);
+	taos_wakelock_ops(&(taos_datap->proximity_wakelock), true);
+	if (0==queue_work(taos_datap->irq_work_queue, &taos_datap->irq_work)) {
+		SENSOR_LOG_INFO("schedule_work failed!\n");
+	}
+	SENSOR_LOG_INFO("exit\n");
+	return IRQ_HANDLED;
 }
 
 static int taos_get_data(void)//iVIZM
 {
-    int ret = 0;
+	int ret = 0;
 
-    ret = i2c_smbus_read_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_STATUS));
+	ret = i2c_smbus_read_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_STATUS));
 
-    if (ret < 0)
-    {
-	SENSOR_LOG_ERROR("read TAOS_TRITON_STATUS failed\n");
+	if (ret < 0) {
+		SENSOR_LOG_ERROR("read TAOS_TRITON_STATUS failed\n");
+		return ret;
+	} else {
+		ret = taos_prox_threshold_set();
+	}
 	return ret;
-    }
-    else
-    {
-	ret = taos_prox_threshold_set();
-    }
-    return ret;
 }
 
 
 static int taos_interrupts_clear(void)//iVIZM
 {
-    int ret = 0;
-    if ((ret = (i2c_smbus_write_byte(taos_datap->client, (TAOS_TRITON_CMD_REG|TAOS_TRITON_CMD_SPL_FN|0x07)))) < 0) {
-	printk(KERN_ERR "TAOS: i2c_smbus_write_byte(2) failed in taos_work_func()\n");
-	return (ret);
-    }
-    return ret;
+	int ret = 0;
+	if ((ret = (i2c_smbus_write_byte(taos_datap->client, (TAOS_TRITON_CMD_REG|TAOS_TRITON_CMD_SPL_FN|0x07)))) < 0) {
+		printk(KERN_ERR "TAOS: i2c_smbus_write_byte(2) failed in taos_work_func()\n");
+		return (ret);
+	}
+	return ret;
 }
 
 static int taos_als_get_data(void)//iVIZM
 {
-    int ret = 0;
-    u8 reg_val;
-    int lux_val = 0;
-    if ((ret = (i2c_smbus_write_byte(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_CNTRL)))) < 0) {
-	printk(KERN_ERR "TAOS: i2c_smbus_write_byte failed in ioctl als_data\n");
-	return (ret);
-    }
-    reg_val = i2c_smbus_read_byte(taos_datap->client);
-    if ((reg_val & (TAOS_TRITON_CNTL_ADC_ENBL | TAOS_TRITON_CNTL_PWRON)) != (TAOS_TRITON_CNTL_ADC_ENBL | TAOS_TRITON_CNTL_PWRON))
-	return -ENODATA;
-    if ((ret = (i2c_smbus_write_byte(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_STATUS)))) < 0) {
-	printk(KERN_ERR "TAOS: i2c_smbus_write_byte failed in ioctl als_data\n");
-	return (ret);
-    }
-    reg_val = i2c_smbus_read_byte(taos_datap->client);
-    if ((reg_val & TAOS_TRITON_STATUS_ADCVALID) != TAOS_TRITON_STATUS_ADCVALID)
-	return -ENODATA;
-
-    if ((lux_val = taos_get_lux()) < 0)
-    {
-	printk(KERN_ERR "TAOS: call to taos_get_lux() returned error %d in ioctl als_data\n", lux_val);
-    }
-
-    if (lux_val<TAOS_ALS_GAIN_DIVIDE && gain_param!=TAOS_ALS_GAIN_8X)
-    {
-	taos_als_gain_set(TAOS_ALS_GAIN_8X);
-    }
-    else
-    {
-	if (lux_val>TAOS_ALS_GAIN_DIVIDE && gain_param!=TAOS_ALS_GAIN_1X)
-	{
-	    taos_als_gain_set(TAOS_ALS_GAIN_1X);
+	int ret = 0;
+	u8 reg_val;
+	int lux_val = 0;
+	if ((ret = (i2c_smbus_write_byte(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_CNTRL)))) < 0) {
+		printk(KERN_ERR "TAOS: i2c_smbus_write_byte failed in ioctl als_data\n");
+		return (ret);
 	}
-    }
+	reg_val = i2c_smbus_read_byte(taos_datap->client);
+	if ((reg_val & (TAOS_TRITON_CNTL_ADC_ENBL | TAOS_TRITON_CNTL_PWRON)) != (TAOS_TRITON_CNTL_ADC_ENBL | TAOS_TRITON_CNTL_PWRON))
+		return -ENODATA;
+	if ((ret = (i2c_smbus_write_byte(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_STATUS)))) < 0) {
+		printk(KERN_ERR "TAOS: i2c_smbus_write_byte failed in ioctl als_data\n");
+		return (ret);
+	}
+	reg_val = i2c_smbus_read_byte(taos_datap->client);
+	if ((reg_val & TAOS_TRITON_STATUS_ADCVALID) != TAOS_TRITON_STATUS_ADCVALID)
+		return -ENODATA;
 
-    if ((ret = (i2c_smbus_write_byte(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_ALS_TIME)))) < 0)
-    {
-	printk(KERN_ERR "TAOS: i2c_smbus_write_byte failed in ioctl als_data\n");
-	return (ret);
-    }
+	if ((lux_val = taos_get_lux()) < 0) {
+		printk(KERN_ERR "TAOS: call to taos_get_lux() returned error %d in ioctl als_data\n", lux_val);
+	}
 
-    reg_val = i2c_smbus_read_byte(taos_datap->client);
+	if (lux_val<TAOS_ALS_GAIN_DIVIDE && gain_param!=TAOS_ALS_GAIN_8X) {
+		taos_als_gain_set(TAOS_ALS_GAIN_8X);
+	} else {
+		if (lux_val>TAOS_ALS_GAIN_DIVIDE && gain_param!=TAOS_ALS_GAIN_1X) {
+			taos_als_gain_set(TAOS_ALS_GAIN_1X);
+		}
+	}
 
-    if (flag_als_debug)
-    {
-	SENSOR_LOG_ERROR(KERN_INFO "reg_val = %d lux_val = %d\n",reg_val,lux_val);
-    }
+	if ((ret = (i2c_smbus_write_byte(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_ALS_TIME)))) < 0) {
+		printk(KERN_ERR "TAOS: i2c_smbus_write_byte failed in ioctl als_data\n");
+		return (ret);
+	}
 
-    if (reg_val != prox_int_time_param)
-    {
-	lux_val = (lux_val * (101 - (0XFF - reg_val)))/20;
-    }
+	reg_val = i2c_smbus_read_byte(taos_datap->client);
 
-    lux_val = taos_lux_filter(lux_val);
+	if (flag_als_debug) {
+		SENSOR_LOG_ERROR(KERN_INFO "reg_val = %d lux_val = %d\n",reg_val,lux_val);
+	}
 
-    if (flag_als_debug)
-    {
-	SENSOR_LOG_ERROR(KERN_INFO "lux_val = %d",lux_val);
-    }
+	if (reg_val != prox_int_time_param) {
+		lux_val = (lux_val * (101 - (0XFF - reg_val)))/20;
+	}
 
-    lux_val = lux_val * taos_datap->light_percent / 100;
-    lux_val = lux_val > 10000 ? 10000 : lux_val;
+	lux_val = taos_lux_filter(lux_val);
 
-    input_report_rel(taos_datap->a_idev, REL_X, lux_val+1);
-    input_sync(taos_datap->a_idev);
+	if (flag_als_debug) {
+		SENSOR_LOG_ERROR(KERN_INFO "lux_val = %d",lux_val);
+	}
 
-    return ret;
+	lux_val = lux_val * taos_datap->light_percent / 100;
+	lux_val = lux_val > 10000 ? 10000 : lux_val;
+
+	input_report_rel(taos_datap->a_idev, REL_X, lux_val+1);
+	input_sync(taos_datap->a_idev);
+
+	return ret;
 }
 
 static int taos_prox_threshold_set(void)//iVIZM
 {
-    int i,ret = 0;
-    u8 chdata[6];
-    u16 proxdata = 0;
-    u16 cleardata = 0;
+	int i,ret = 0;
+	u8 chdata[6];
+	u16 proxdata = 0;
+	u16 cleardata = 0;
 
-    for (i = 0; i < 6; i++) {
-	chdata[i] = (i2c_smbus_read_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_CMD_WORD_BLK_RW| (TAOS_TRITON_ALS_CHAN0LO + i))));
-    }
-    cleardata = chdata[0] + chdata[1]*256;
-    proxdata = chdata[4] + chdata[5]*256;
-
-	if (pro_ft || flag_prox_debug)
-    {
-	pro_buf[0] = 0xff;
-	pro_buf[1] = 0xff;
-	pro_buf[2] = 0xff;
-	pro_buf[3] = 0xff;
-
-	for( mcount=0; mcount<4; mcount++ )
-	{
-	    if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x08) + mcount, pro_buf[mcount]))) < 0)
-	    {
-		 printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in taos prox threshold set\n");
-		 return (ret);
-	    }
+	for (i = 0; i < 6; i++) {
+		chdata[i] = (i2c_smbus_read_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_CMD_WORD_BLK_RW| (TAOS_TRITON_ALS_CHAN0LO + i))));
 	}
+	cleardata = chdata[0] + chdata[1]*256;
+	proxdata = chdata[4] + chdata[5]*256;
 
-	if (pro_ft)
-	{
-	    SENSOR_LOG_INFO( "init the prox threshold");
-	}
+	if (pro_ft || flag_prox_debug) {
+		pro_buf[0] = 0xff;
+		pro_buf[1] = 0xff;
+		pro_buf[2] = 0xff;
+		pro_buf[3] = 0xff;
 
-	if (flag_prox_debug)
-	{
-	    mdelay(prox_debug_delay_time);
-	    SENSOR_LOG_INFO( "proxdata = %d",proxdata);
-		input_report_rel(taos_datap->p_idev, REL_MISC, proxdata>0? proxdata:1);
-
-	}
-		pro_ft = false;
-	}
-    else
-    {
-	if (proxdata < taos_cfgp->prox_threshold_lo)
-	{   //FAR
-	    pro_buf[0] = 0x0;
-	    pro_buf[1] = 0x0;
-	    pro_buf[2] = taos_cfgp->prox_threshold_hi & 0x0ff;
-	    pro_buf[3] = taos_cfgp->prox_threshold_hi >> 8;
-		SENSOR_LOG_INFO( "Far!!! proxdata = %d, hi = %d, low = %d\n",proxdata,taos_cfgp->prox_threshold_hi,taos_cfgp->prox_threshold_lo);
-	    input_report_rel(taos_datap->p_idev, REL_X, proxdata>0? proxdata:1);
-	}
-	else
-	{
-		if (proxdata > taos_cfgp->prox_threshold_hi)
-		{   //NEAR
-		    if (cleardata > ((sat_als*80)/100))
-		    {
-			printk(KERN_ERR "TAOS: %u <= %u*0.8 int data\n",proxdata,sat_als);
-			msleep(100);
-			return -ENODATA;
-		    }
-		    pro_buf[0] = taos_cfgp->prox_threshold_lo & 0x0ff;
-		    pro_buf[1] = taos_cfgp->prox_threshold_lo >> 8;
-		    pro_buf[2] = 0xff;
-		    pro_buf[3] = 0xff;
-		    SENSOR_LOG_INFO("Near!!! proxdata = %d, hi = %d, low = %d\n",proxdata,taos_cfgp->prox_threshold_hi,taos_cfgp->prox_threshold_lo);
-		    input_report_rel(taos_datap->p_idev, REL_X, proxdata);
+		for( mcount=0; mcount<4; mcount++ ) {
+			if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x08) + mcount, pro_buf[mcount]))) < 0) {
+				printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in taos prox threshold set\n");
+				return (ret);
+			}
 		}
-		else
-		{
-		    if( (taos_cfgp->prox_threshold_hi-proxdata) > (proxdata-taos_cfgp->prox_threshold_lo))
-		    {
-			//FAR
+
+		if (pro_ft) {
+			SENSOR_LOG_INFO( "init the prox threshold");
+		}
+
+		if (flag_prox_debug) {
+			mdelay(prox_debug_delay_time);
+			SENSOR_LOG_INFO( "proxdata = %d",proxdata);
+			input_report_rel(taos_datap->p_idev, REL_MISC, proxdata>0? proxdata:1);
+
+		}
+		pro_ft = false;
+	} else {
+		if (proxdata < taos_cfgp->prox_threshold_lo)
+		{   //FAR
 			pro_buf[0] = 0x0;
 			pro_buf[1] = 0x0;
 			pro_buf[2] = taos_cfgp->prox_threshold_hi & 0x0ff;
 			pro_buf[3] = taos_cfgp->prox_threshold_hi >> 8;
-				SENSOR_LOG_INFO( "Far!!! proxdata = %d, hi = %d, low = %d\n",proxdata,taos_cfgp->prox_threshold_hi,taos_cfgp->prox_threshold_lo);
-			input_report_rel(taos_datap->p_idev, REL_X, (taos_cfgp->prox_threshold_lo-50)>0? (taos_cfgp->prox_threshold_lo-50):1);
-		    }
-		    else
-		    {
-			//NEAR
-			if (cleardata > ((sat_als*80)/100))
-			{
-				printk(KERN_ERR "TAOS: %u <= %u*0.8 int data\n",proxdata,sat_als);
-				msleep(100);
-			    return -ENODATA;
+			SENSOR_LOG_INFO( "Far!!! proxdata = %d, hi = %d, low = %d\n",proxdata,taos_cfgp->prox_threshold_hi,taos_cfgp->prox_threshold_lo);
+			input_report_rel(taos_datap->p_idev, REL_X, proxdata>0? proxdata:1);
+		} else {
+			if (proxdata > taos_cfgp->prox_threshold_hi)
+			{   //NEAR
+				if (cleardata > ((sat_als*80)/100)) {
+					printk(KERN_ERR "TAOS: %u <= %u*0.8 int data\n",proxdata,sat_als);
+					msleep(100);
+					return -ENODATA;
+				}
+				pro_buf[0] = taos_cfgp->prox_threshold_lo & 0x0ff;
+				pro_buf[1] = taos_cfgp->prox_threshold_lo >> 8;
+				pro_buf[2] = 0xff;
+				pro_buf[3] = 0xff;
+				SENSOR_LOG_INFO("Near!!! proxdata = %d, hi = %d, low = %d\n",proxdata,taos_cfgp->prox_threshold_hi,taos_cfgp->prox_threshold_lo);
+				input_report_rel(taos_datap->p_idev, REL_X, proxdata);
+			} else {
+				if( (taos_cfgp->prox_threshold_hi-proxdata) > (proxdata-taos_cfgp->prox_threshold_lo)) {
+					//FAR
+					pro_buf[0] = 0x0;
+					pro_buf[1] = 0x0;
+					pro_buf[2] = taos_cfgp->prox_threshold_hi & 0x0ff;
+					pro_buf[3] = taos_cfgp->prox_threshold_hi >> 8;
+					SENSOR_LOG_INFO( "Far!!! proxdata = %d, hi = %d, low = %d\n",proxdata,taos_cfgp->prox_threshold_hi,taos_cfgp->prox_threshold_lo);
+					input_report_rel(taos_datap->p_idev, REL_X, (taos_cfgp->prox_threshold_lo-50)>0? (taos_cfgp->prox_threshold_lo-50):1);
+				} else {
+					//NEAR
+					if (cleardata > ((sat_als*80)/100)) {
+						printk(KERN_ERR "TAOS: %u <= %u*0.8 int data\n",proxdata,sat_als);
+						msleep(100);
+						return -ENODATA;
+					}
+					pro_buf[0] = taos_cfgp->prox_threshold_lo & 0x0ff;
+					pro_buf[1] = taos_cfgp->prox_threshold_lo >> 8;
+					pro_buf[2] = 0xff;
+					pro_buf[3] = 0xff;
+					SENSOR_LOG_INFO( "Near!!! proxdata = %d, hi = %d, low = %d\n",proxdata,taos_cfgp->prox_threshold_hi,taos_cfgp->prox_threshold_lo);
+					input_report_rel(taos_datap->p_idev, REL_X, taos_cfgp->prox_threshold_hi+50);
+				}
 			}
-			pro_buf[0] = taos_cfgp->prox_threshold_lo & 0x0ff;
-			pro_buf[1] = taos_cfgp->prox_threshold_lo >> 8;
-			pro_buf[2] = 0xff;
-			pro_buf[3] = 0xff;
-			SENSOR_LOG_INFO( "Near!!! proxdata = %d, hi = %d, low = %d\n",proxdata,taos_cfgp->prox_threshold_hi,taos_cfgp->prox_threshold_lo);
-			input_report_rel(taos_datap->p_idev, REL_X, taos_cfgp->prox_threshold_hi+50);
-		    }
 		}
-	    }
-    }
-
-    input_sync(taos_datap->p_idev);
-
-    for( mcount=0; mcount<4; mcount++)
-    {
-	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x08) + mcount, pro_buf[mcount]))) < 0)
-	{
-	     printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in taos prox threshold set\n");
-	     return (ret);
 	}
-    }
 
-    return ret;
+	input_sync(taos_datap->p_idev);
+
+	for( mcount=0; mcount<4; mcount++) {
+		if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x08) + mcount, pro_buf[mcount]))) < 0) {
+			printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in taos prox threshold set\n");
+			return (ret);
+		}
+	}
+
+	return ret;
 }
 
 // driver init
 static int __init taos_init(void)
 {
 #ifdef CONFIG_ZTEMT_SENSORS_ALS_PS_AUTO_DETECT
-    return 0;
+	return 0;
 #else
-    return i2c_add_driver(&tmd2772_driver);
+	return i2c_add_driver(&tmd2772_driver);
 #endif
 }
 
@@ -2433,54 +2067,54 @@ static void __exit taos_exit(void)
 
 static int tmd2772_parse_dt(struct taos_data *chip)
 {
-    int rc = 0;
+	int rc = 0;
 	u32 tmp;
 	struct device_node *np = chip->client->dev.of_node;
 
 	chip->irq_pin_num = of_get_named_gpio(np, "ams,irq-gpio", 0);
-    SENSOR_LOG_INFO("irq_pin_num is %d\n",chip->irq_pin_num);
+	SENSOR_LOG_INFO("irq_pin_num is %d\n",chip->irq_pin_num);
 
 	rc = of_property_read_u32(np, "ams,prox-offset-cal-ability-tmd2772", &tmp);
 	chip->prox_offset_cal_ability = (!rc ? tmp : 8);
-    SENSOR_LOG_INFO("prox_offset_cal_ability is %d\n", chip->prox_offset_cal_ability);
+	SENSOR_LOG_INFO("prox_offset_cal_ability is %d\n", chip->prox_offset_cal_ability);
 
 	rc = of_property_read_u32(np, "ams,prox-led-plus-cnt-tmd2772", &tmp);
 	chip->prox_led_plus_cnt = (!rc ? tmp : 8);
-    SENSOR_LOG_INFO("prox_led_plus_cnt is %d\n", chip->prox_led_plus_cnt);
+	SENSOR_LOG_INFO("prox_led_plus_cnt is %d\n", chip->prox_led_plus_cnt);
 
 	rc = of_property_read_u32(np, "ams,light-percent", &tmp);
 	chip->light_percent = (!rc ? tmp : 100);
-    SENSOR_LOG_INFO("light_percent is %d\n", chip->light_percent);
+	SENSOR_LOG_INFO("light_percent is %d\n", chip->light_percent);
 
-    return 0;
+	return 0;
 }
 
 static void tmd2772_data_init(void)
 {
-    taos_datap->als_on  = false;
-    taos_datap->prox_on = false;
-    taos_datap->init = false;
-    taos_datap->als_poll_time_mul = 1;
-    taos_datap->prox_name = "proximity";
-    taos_datap->als_name  = "light";
-    taos_datap->chip_name = "tmd2772";
-    taos_datap->prox_calibrate_result = false;
-    taos_datap->prox_offset_cal_result = false;
+	taos_datap->als_on  = false;
+	taos_datap->prox_on = false;
+	taos_datap->init = false;
+	taos_datap->als_poll_time_mul = 1;
+	taos_datap->prox_name = "proximity";
+	taos_datap->als_name  = "light";
+	taos_datap->chip_name = "tmd2772";
+	taos_datap->prox_calibrate_result = false;
+	taos_datap->prox_offset_cal_result = false;
 	taos_datap->prox_offset_cal_verify = true;
 	taos_datap->prox_calibrate_verify = true;
-    taos_datap->prox_thres_hi_max = PROX_THRESHOLD_HIGH_MAX;
-    taos_datap->prox_thres_hi_min = PROX_THRESHOLD_HIGH_MIN;
-    taos_datap->prox_data_max     = PROX_DATA_MAX;
-    taos_datap->prox_offset_cal_per_bit = taos_datap->prox_offset_cal_ability * taos_datap->prox_led_plus_cnt;
-    taos_datap->prox_uncover_data = 0;
-    taos_datap->prox_calibrate_times = 10;
-    taos_datap->prox_calibrate_flag = true;//true :auto_calibrate,false :manual_calibrate
-    taos_datap->prox_manual_calibrate_threshold = 0;
-    taos_datap->proximity_wakelock.name = "proximity-wakelock";
-    taos_datap->proximity_wakelock.locked = false;
-    taos_datap->phone_is_sleep = false;
-    taos_datap->irq_work_status = false;
-    taos_datap->irq_enabled = true;
+	taos_datap->prox_thres_hi_max = PROX_THRESHOLD_HIGH_MAX;
+	taos_datap->prox_thres_hi_min = PROX_THRESHOLD_HIGH_MIN;
+	taos_datap->prox_data_max     = PROX_DATA_MAX;
+	taos_datap->prox_offset_cal_per_bit = taos_datap->prox_offset_cal_ability * taos_datap->prox_led_plus_cnt;
+	taos_datap->prox_uncover_data = 0;
+	taos_datap->prox_calibrate_times = 10;
+	taos_datap->prox_calibrate_flag = true;//true :auto_calibrate,false :manual_calibrate
+	taos_datap->prox_manual_calibrate_threshold = 0;
+	taos_datap->proximity_wakelock.name = "proximity-wakelock";
+	taos_datap->proximity_wakelock.locked = false;
+	taos_datap->phone_is_sleep = false;
+	taos_datap->irq_work_status = false;
+	taos_datap->irq_enabled = true;
 }
 /*POWER SUPPLY VOLTAGE RANGE */
 
@@ -2497,24 +2131,24 @@ static int tmd2772_power_init(struct taos_data *chip, bool on)
 	if (!on) {
 		if (regulator_count_voltages(chip->vdd) > 0)
 			regulator_set_voltage(chip->vdd, 0,
-				TMD2772_VDD_MAX_UV);
+					      TMD2772_VDD_MAX_UV);
 		regulator_put(chip->vdd);
 
 		if (regulator_count_voltages(chip->vio) > 0)
 			regulator_set_voltage(chip->vio, 0,
-				TMD2772_VIO_MAX_UV);
+					      TMD2772_VIO_MAX_UV);
 		regulator_put(chip->vio);
 	} else {
-	      chip->vdd = regulator_get(&chip->client->dev,"vdd");
-	      if(IS_ERR(chip->vdd)) {
-		       rc = PTR_ERR(chip->vdd);
+		chip->vdd = regulator_get(&chip->client->dev,"vdd");
+		if(IS_ERR(chip->vdd)) {
+			rc = PTR_ERR(chip->vdd);
 			dev_err(&chip->client->dev,
 				"Regulator get failed vdd rc=%d\n", rc);
 			return rc;
-	       }
+		}
 		if (regulator_count_voltages(chip->vdd) > 0) {
 			rc = regulator_set_voltage(chip->vdd,
-				TMD2772_VDD_MIN_UV, TMD2772_VDD_MAX_UV);
+						   TMD2772_VDD_MIN_UV, TMD2772_VDD_MAX_UV);
 			if (rc) {
 				dev_err(&chip->client->dev,
 					"Regulator set failed vdd rc=%d\n",
@@ -2533,10 +2167,10 @@ static int tmd2772_power_init(struct taos_data *chip, bool on)
 
 		if (regulator_count_voltages(chip->vio) > 0) {
 			rc = regulator_set_voltage(chip->vio,
-				TMD2772_VIO_MIN_UV, TMD2772_VIO_MAX_UV);
+						   TMD2772_VIO_MIN_UV, TMD2772_VIO_MAX_UV);
 			if (rc) {
 				dev_err(&chip->client->dev,
-				"Regulator set failed vio rc=%d\n", rc);
+					"Regulator set failed vio rc=%d\n", rc);
 				goto err_vio_set;
 			}
 		}
@@ -2577,32 +2211,27 @@ err_vdd_set:
 
 static int tmd2772_chip_detect(struct taos_data *chip)
 {
-    int i                = 0;
-    int ret              = 0;
-    int chip_id          = 0;
-    int detect_max_times = 10;
+	int i                = 0;
+	int ret              = 0;
+	int chip_id          = 0;
+	int detect_max_times = 10;
 
-    for (i=0; i<detect_max_times; i++)
-    {
-	chip_id = i2c_smbus_read_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | (TAOS_TRITON_CNTRL + TAOS_TRITON_CHIPID)));
+	for (i=0; i<detect_max_times; i++) {
+		chip_id = i2c_smbus_read_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | (TAOS_TRITON_CNTRL + TAOS_TRITON_CHIPID)));
 
-	if (chip_id == 0x39)
-	{
-	    break;
+		if (chip_id == 0x39) {
+			break;
+		} else {
+			SENSOR_LOG_ERROR("retry %d time, chip id is [0x%x] was read does not match [TMD27723-0x39]\n", i+1, chip_id);
+		}
 	}
-	else
-	{
-	    SENSOR_LOG_ERROR("retry %d time, chip id is [0x%x] was read does not match [TMD27723-0x39]\n", i+1, chip_id);
+
+	if (i>=detect_max_times) {
+		SENSOR_LOG_ERROR("chip detect failed\n");
+		ret =  -ENODEV;
 	}
-    }
 
-    if (i>=detect_max_times)
-    {
-	SENSOR_LOG_ERROR("chip detect failed\n");
-	ret =  -ENODEV;
-    }
-
-    return ret;
+	return ret;
 }
 
 // client probe
@@ -2865,200 +2494,198 @@ power_init_failed:
 #ifdef CONFIG_PM_SLEEP
 //don't move these pm blew to ioctl
 //resume
-static int taos_resume(struct i2c_client *client) {
+static int taos_resume(struct i2c_client *client)
+{
 	int ret = 0;
-    SENSOR_LOG_INFO("enter\n");
-	if(1 == taos_datap->prox_on)
-    {
-	SENSOR_LOG_INFO( "----------%s: %d: disable irq wakeup\n",__func__,__LINE__);
+	SENSOR_LOG_INFO("enter\n");
+	if(1 == taos_datap->prox_on) {
+		SENSOR_LOG_INFO( "----------%s: %d: disable irq wakeup\n",__func__,__LINE__);
 		ret = disable_irq_wake(taos_datap->client->irq);
 	}
-    if(ret < 0)
+	if(ret < 0)
 		printk(KERN_ERR "TAOS: disable_irq_wake failed\n");
-    SENSOR_LOG_INFO("eixt\n");
-    return ret ;
+	SENSOR_LOG_INFO("eixt\n");
+	return ret ;
 }
 
 //suspend
 static int taos_suspend(struct i2c_client *client, pm_message_t mesg)
 {
 	int ret = 0;
-    SENSOR_LOG_INFO("enter\n");
-	if(1 == taos_datap->prox_on)
-    {
-	SENSOR_LOG_INFO( "----------%s: %d: enable irq wakeup\n",__func__,__LINE__);
-	ret = enable_irq_wake(taos_datap->client->irq);
-    }
-	if(ret < 0)
-    {
+	SENSOR_LOG_INFO("enter\n");
+	if(1 == taos_datap->prox_on) {
+		SENSOR_LOG_INFO( "----------%s: %d: enable irq wakeup\n",__func__,__LINE__);
+		ret = enable_irq_wake(taos_datap->client->irq);
+	}
+	if(ret < 0) {
 		printk(KERN_ERR "TAOS: enable_irq_wake failed\n");
-    }
+	}
 
-    wakeup_from_sleep = true;
+	wakeup_from_sleep = true;
 
-    SENSOR_LOG_INFO("eixt\n");
-    return ret ;
+	SENSOR_LOG_INFO("eixt\n");
+	return ret ;
 }
 
 #endif
 // client remove
-static int __devexit tmd2772_remove(struct i2c_client *client) {
-    int ret = 0;
+static int __devexit tmd2772_remove(struct i2c_client *client)
+{
+	int ret = 0;
 
-    return (ret);
+	return (ret);
 }
 
 
 // read/calculate lux value
 static int taos_get_lux(void)
 {
-    int raw_clear = 0, raw_ir = 0, raw_lux = 0;
-    u32 lux = 0;
-    u32 ratio = 0;
-    u8 dev_gain = 0;
-    u16 Tint = 0;
-    struct lux_data *p;
-    int ret = 0;
-    u8 chdata[4];
-    int tmp = 0, i = 0,tmp_gain=1;
-    for (i = 0; i < 4; i++) {
-	if ((ret = (i2c_smbus_write_byte(taos_datap->client, (TAOS_TRITON_CMD_REG | (TAOS_TRITON_ALS_CHAN0LO + i))))) < 0) {
-	    printk(KERN_ERR "TAOS: i2c_smbus_write_byte() to chan0/1/lo/hi reg failed in taos_get_lux()\n");
-	    return (ret);
+	int raw_clear = 0, raw_ir = 0, raw_lux = 0;
+	u32 lux = 0;
+	u32 ratio = 0;
+	u8 dev_gain = 0;
+	u16 Tint = 0;
+	struct lux_data *p;
+	int ret = 0;
+	u8 chdata[4];
+	int tmp = 0, i = 0,tmp_gain=1;
+	for (i = 0; i < 4; i++) {
+		if ((ret = (i2c_smbus_write_byte(taos_datap->client, (TAOS_TRITON_CMD_REG | (TAOS_TRITON_ALS_CHAN0LO + i))))) < 0) {
+			printk(KERN_ERR "TAOS: i2c_smbus_write_byte() to chan0/1/lo/hi reg failed in taos_get_lux()\n");
+			return (ret);
+		}
+		chdata[i] = i2c_smbus_read_byte(taos_datap->client);
 	}
-	chdata[i] = i2c_smbus_read_byte(taos_datap->client);
-    }
 
-    tmp = (taos_cfgp->als_time + 25)/50;            //if atime =100  tmp = (atime+25)/50=2.5   time = 2.7*(256-atime)=  412.5
-    TritonTime.numerator = 1;
-    TritonTime.denominator = tmp;
+	tmp = (taos_cfgp->als_time + 25)/50;            //if atime =100  tmp = (atime+25)/50=2.5   time = 2.7*(256-atime)=  412.5
+	TritonTime.numerator = 1;
+	TritonTime.denominator = tmp;
 
-    tmp = 300 * taos_cfgp->als_time;               //tmp = 300*atime  400
-    if(tmp > 65535)
-	tmp = 65535;
-    TritonTime.saturation = tmp;
-    raw_clear = chdata[1];
-    raw_clear <<= 8;
-    raw_clear |= chdata[0];
-    raw_ir    = chdata[3];
-    raw_ir    <<= 8;
-    raw_ir    |= chdata[2];
+	tmp = 300 * taos_cfgp->als_time;               //tmp = 300*atime  400
+	if(tmp > 65535)
+		tmp = 65535;
+	TritonTime.saturation = tmp;
+	raw_clear = chdata[1];
+	raw_clear <<= 8;
+	raw_clear |= chdata[0];
+	raw_ir    = chdata[3];
+	raw_ir    <<= 8;
+	raw_ir    |= chdata[2];
 
-    raw_clear *= ((taos_cfgp->scale_factor_als )*tmp_gain);
-    raw_ir *= (taos_cfgp->scale_factor_prox );
+	raw_clear *= ((taos_cfgp->scale_factor_als )*tmp_gain);
+	raw_ir *= (taos_cfgp->scale_factor_prox );
 
-    if(raw_ir > raw_clear) {
-	raw_lux = raw_ir;
-	raw_ir = raw_clear;
-	raw_clear = raw_lux;
-    }
-    dev_gain = taos_triton_gain_table[taos_cfgp->gain & 0x3];
-    if(raw_clear >= lux_timep->saturation)
-	return(TAOS_MAX_LUX);
-    if(raw_ir >= lux_timep->saturation)
-	return(TAOS_MAX_LUX);
-    if(raw_clear == 0)
-	return(0);
-    if(dev_gain == 0 || dev_gain > 127) {
-	printk(KERN_ERR "TAOS: dev_gain = 0 or > 127 in taos_get_lux()\n");
-	return -1;
-    }
-    if(lux_timep->denominator == 0) {
-	printk(KERN_ERR "TAOS: lux_timep->denominator = 0 in taos_get_lux()\n");
-	return -1;
-    }
-    ratio = (raw_ir<<15)/raw_clear;
-    for (p = lux_tablep; p->ratio && p->ratio < ratio; p++);
-	#ifdef WORK_UES_POLL_MODE
-    if(!p->ratio) {//iVIZM
-	if(lux_history[0] < 0)
-	    return 0;
-	else
-	    return lux_history[0];
-    }
-	#endif
-    Tint = taos_cfgp->als_time;
-    raw_clear = ((raw_clear*400 + (dev_gain>>1))/dev_gain + (Tint>>1))/Tint;
-    raw_ir = ((raw_ir*400 +(dev_gain>>1))/dev_gain + (Tint>>1))/Tint;
-    lux = ((raw_clear*(p->clear)) - (raw_ir*(p->ir)));
-    lux = (lux + 32000)/64000;
-    if(lux > TAOS_MAX_LUX) {
-	lux = TAOS_MAX_LUX;
-    }
-    return(lux);
+	if(raw_ir > raw_clear) {
+		raw_lux = raw_ir;
+		raw_ir = raw_clear;
+		raw_clear = raw_lux;
+	}
+	dev_gain = taos_triton_gain_table[taos_cfgp->gain & 0x3];
+	if(raw_clear >= lux_timep->saturation)
+		return(TAOS_MAX_LUX);
+	if(raw_ir >= lux_timep->saturation)
+		return(TAOS_MAX_LUX);
+	if(raw_clear == 0)
+		return(0);
+	if(dev_gain == 0 || dev_gain > 127) {
+		printk(KERN_ERR "TAOS: dev_gain = 0 or > 127 in taos_get_lux()\n");
+		return -1;
+	}
+	if(lux_timep->denominator == 0) {
+		printk(KERN_ERR "TAOS: lux_timep->denominator = 0 in taos_get_lux()\n");
+		return -1;
+	}
+	ratio = (raw_ir<<15)/raw_clear;
+	for (p = lux_tablep; p->ratio && p->ratio < ratio; p++);
+#ifdef WORK_UES_POLL_MODE
+	if(!p->ratio) {//iVIZM
+		if(lux_history[0] < 0)
+			return 0;
+		else
+			return lux_history[0];
+	}
+#endif
+	Tint = taos_cfgp->als_time;
+	raw_clear = ((raw_clear*400 + (dev_gain>>1))/dev_gain + (Tint>>1))/Tint;
+	raw_ir = ((raw_ir*400 +(dev_gain>>1))/dev_gain + (Tint>>1))/Tint;
+	lux = ((raw_clear*(p->clear)) - (raw_ir*(p->ir)));
+	lux = (lux + 32000)/64000;
+	if(lux > TAOS_MAX_LUX) {
+		lux = TAOS_MAX_LUX;
+	}
+	return(lux);
 }
 
 static int taos_lux_filter(int lux)
 {
-    static u8 middle[] = {1,0,2,0,0,2,0,1};
-    int index;
+	static u8 middle[] = {1,0,2,0,0,2,0,1};
+	int index;
 
-    lux_history[2] = lux_history[1];
-    lux_history[1] = lux_history[0];
-    lux_history[0] = lux;
+	lux_history[2] = lux_history[1];
+	lux_history[1] = lux_history[0];
+	lux_history[0] = lux;
 
-    if(lux_history[2] < 0) { //iVIZM
-	    if(lux_history[1] > 0)
-		    return lux_history[1];
-	    else
-		    return lux_history[0];
-    }
-    index = 0;
-    if( lux_history[0] > lux_history[1] )
-	index += 4;
-    if( lux_history[1] > lux_history[2] )
-	index += 2;
-    if( lux_history[0] > lux_history[2] )
-	index++;
-    return(lux_history[middle[index]]);
+	if(lux_history[2] < 0) { //iVIZM
+		if(lux_history[1] > 0)
+			return lux_history[1];
+		else
+			return lux_history[0];
+	}
+	index = 0;
+	if( lux_history[0] > lux_history[1] )
+		index += 4;
+	if( lux_history[1] > lux_history[2] )
+		index += 2;
+	if( lux_history[0] > lux_history[2] )
+		index++;
+	return(lux_history[middle[index]]);
 }
 
 // verify device
 static int taos_device_name(unsigned char *bufp, char **device_name)
 {
-    /*
-    int i=0 ,j;
-    for (i = 0; i < TAOS_MAX_DEVICE_REGS; i++)
-    {
-		j=bufp[i];
-		printk("(bufp[i=%x]=%x,\n",i,j);
-    }
-    */
-    *device_name="tritonFN";
-    return(1);
+	/*
+	  int i=0 ,j;
+	  for (i = 0; i < TAOS_MAX_DEVICE_REGS; i++) {
+	  j=bufp[i];
+	  printk("(bufp[i=%x]=%x,\n",i,j);
+	  }
+	*/
+	*device_name="tritonFN";
+	return(1);
 }
 
 // proximity poll
 static int taos_prox_poll(struct taos_prox_info *prxp)
 {
-    int i = 0, ret = 0; //wait_count = 0;
-    u8 chdata[6];
+	int i = 0, ret = 0; //wait_count = 0;
+	u8 chdata[6];
 
-    for (i = 0; i < 6; i++) {
-	chdata[i] = (i2c_smbus_read_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_CMD_AUTO | (TAOS_TRITON_ALS_CHAN0LO + i))));
-    }
-    prxp->prox_clear = chdata[1];
-    prxp->prox_clear <<= 8;
-    prxp->prox_clear |= chdata[0];
-    if (prxp->prox_clear > ((sat_als*80)/100))
-    {
+	for (i = 0; i < 6; i++) {
+		chdata[i] = (i2c_smbus_read_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_CMD_AUTO | (TAOS_TRITON_ALS_CHAN0LO + i))));
+	}
+	prxp->prox_clear = chdata[1];
+	prxp->prox_clear <<= 8;
+	prxp->prox_clear |= chdata[0];
+	if (prxp->prox_clear > ((sat_als*80)/100)) {
 		printk(KERN_ERR "TAOS: %u <= %u*0.8 poll data\n",prxp->prox_clear,sat_als);
-	return -ENODATA;
-    }
-    prxp->prox_data = chdata[5];
-    prxp->prox_data <<= 8;
-    prxp->prox_data |= chdata[4];
+		return -ENODATA;
+	}
+	prxp->prox_data = chdata[5];
+	prxp->prox_data <<= 8;
+	prxp->prox_data |= chdata[4];
 
-    return (ret);
+	return (ret);
 }
 
 // prox poll timer function
-static void taos_prox_poll_timer_func(unsigned long param) {
-    int ret = 0;
+static void taos_prox_poll_timer_func(unsigned long param)
+{
+	int ret = 0;
 
     if (!device_released) {
 	if ((ret = taos_prox_poll(prox_cur_infop)) < 0) {
-	    printk(KERN_ERR "TAOS: call to prox_poll failed in taos_prox_poll_timer_func()\n");
+	printk(KERN_ERR "TAOS: call to prox_poll failed in taos_prox_poll_timer_func()\n");
 	    return;
 	}
 	taos_prox_poll_timer_start();
@@ -3067,7 +2694,8 @@ static void taos_prox_poll_timer_func(unsigned long param) {
 }
 
 // start prox poll timer
-static void taos_prox_poll_timer_start(void) {
+static void taos_prox_poll_timer_start(void)
+{
     init_timer(&prox_poll_timer);
     prox_poll_timer.expires = jiffies + (HZ/10);
     prox_poll_timer.function = taos_prox_poll_timer_func;
@@ -3077,707 +2705,625 @@ static void taos_prox_poll_timer_start(void) {
 
 static void taos_update_sat_als(void)
 {
-    u8 reg_val = 0;
-    int ret = 0;
+	u8 reg_val = 0;
+	int ret = 0;
 
-    if ((ret = (i2c_smbus_write_byte(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_ALS_TIME)))) < 0)
-    {
-	printk(KERN_ERR "TAOS: i2c_smbus_write_byte failed in ioctl als_calibrate\n");
-	return;
-    }
+	if ((ret = (i2c_smbus_write_byte(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_ALS_TIME)))) < 0) {
+		printk(KERN_ERR "TAOS: i2c_smbus_write_byte failed in ioctl als_calibrate\n");
+		return;
+	}
 
-    reg_val = i2c_smbus_read_byte(taos_datap->client);
+	reg_val = i2c_smbus_read_byte(taos_datap->client);
 
-    sat_als = (256 - reg_val) << 10;
+	sat_als = (256 - reg_val) << 10;
 }
 
 static int taos_als_gain_set(unsigned als_gain)
 {
-    int ret;
-    prox_gain_param = (prox_gain_param & 0xFC) | als_gain;
-    gain_param      = prox_gain_param & 0x03;
+	int ret;
+	prox_gain_param = (prox_gain_param & 0xFC) | als_gain;
+	gain_param      = prox_gain_param & 0x03;
 
-    if (NULL!=taos_cfgp)
-    {
-	taos_cfgp->gain      = gain_param;
-	taos_cfgp->prox_gain = prox_gain_param;
-	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x0F), taos_cfgp->prox_gain))) < 0)
-	{
-	    SENSOR_LOG_ERROR("failed to write the prox_led_strength reg\n");
-	    return -EINVAL;
+	if (NULL!=taos_cfgp) {
+		taos_cfgp->gain      = gain_param;
+		taos_cfgp->prox_gain = prox_gain_param;
+		if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x0F), taos_cfgp->prox_gain))) < 0) {
+			SENSOR_LOG_ERROR("failed to write the prox_led_strength reg\n");
+			return -EINVAL;
+		}
+	} else {
+		SENSOR_LOG_ERROR("taos_cfgp is NULL\n");
+		return -EINVAL;
 	}
-    }
-    else
-    {
-	SENSOR_LOG_ERROR("taos_cfgp is NULL\n");
-	return -EINVAL;
-    }
 
-    return ret;
+	return ret;
 }
 
 static void taos_als_poll_work_func(struct work_struct *work)
 {
-    taos_als_get_data();
-    if (true == taos_datap->als_on)
-    {
-	schedule_delayed_work(&taos_datap->als_poll_work, msecs_to_jiffies(als_poll_time_mul*als_poll_delay));
-    }
+	taos_als_get_data();
+	if (true == taos_datap->als_on) {
+		schedule_delayed_work(&taos_datap->als_poll_work, msecs_to_jiffies(als_poll_time_mul*als_poll_delay));
+	}
 }
 
 static void taos_prox_calibrate_work_func(struct work_struct *work)
 {
-
-		taos_prox_calibrate();
-
+	taos_prox_calibrate();
 }
 
 static int taos_prox_offset_cal_prepare(void)
 {
-    int ret =1;
-    if (NULL!=taos_cfgp)
-    {
-	taos_cfgp->prox_config_offset = 0;
-	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x1E), taos_cfgp->prox_config_offset))) < 0)
-	{
-	    SENSOR_LOG_ERROR("failed to write the prox_config_offset  reg\n");
-	     return ret;
+	int ret =1;
+	if (NULL!=taos_cfgp) {
+		taos_cfgp->prox_config_offset = 0;
+		if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x1E), taos_cfgp->prox_config_offset))) < 0) {
+			SENSOR_LOG_ERROR("failed to write the prox_config_offset  reg\n");
+			return ret;
+		}
+	} else {
+		SENSOR_LOG_ERROR("taos_cfgp is NULL\n");
+		return -EINVAL;
 	}
-    }
-    else
-    {
-	SENSOR_LOG_ERROR("taos_cfgp is NULL\n");
-	 return -EINVAL;
-    }
-	 return ret;
+	return ret;
 }
 
 static int taos_prox_offset_calculate(int data, int target)
 {
-    int offset;
+	int offset;
 
-    if (data > PROX_DATA_TARGET)
-    {
-	offset = (data - PROX_DATA_TARGET) * 10 / taos_datap->prox_offset_cal_per_bit;
-    }
-    else
-    {
-	offset = (PROX_DATA_TARGET - data) * 16 / taos_datap->prox_offset_cal_per_bit + 128;
-    }
+	if (data > PROX_DATA_TARGET) {
+		offset = (data - PROX_DATA_TARGET) * 10 / taos_datap->prox_offset_cal_per_bit;
+	} else {
+		offset = (PROX_DATA_TARGET - data) * 16 / taos_datap->prox_offset_cal_per_bit + 128;
+	}
 
-   SENSOR_LOG_ERROR("TAOS:------------ taos_cfgp->prox_offset = %d\n",offset );
+	SENSOR_LOG_ERROR("TAOS:------------ taos_cfgp->prox_offset = %d\n",offset );
 
-    return offset;
+	return offset;
 }
 
 static int taos_prox_uncover_data_get(void)
 {
-    u8 i = 0, j = 0;
-    int prox_sum = 0, ret = 0;
-    static struct taos_prox_info prox_info_temp;
+	u8 i = 0, j = 0;
+	int prox_sum = 0, ret = 0;
+	static struct taos_prox_info prox_info_temp;
 
-    mdelay(20);
-    for (i = 0, j = 0; i < PROX_OFFSET_CAL_BUFFER_SIZE / 5; i++)
-    {
-	if ((ret = taos_prox_poll(&prox_info_temp)) < 0)
-	{
-	    SENSOR_LOG_ERROR("failed to tmd2772_prox_read_data\n");
-	}
-	else
-	{
-	    j++;
-	    prox_sum += prox_info_temp.prox_data;
-	    SENSOR_LOG_ERROR("prox_data is %d\n",prox_info_temp.prox_data);
-	}
 	mdelay(20);
-    }
+	for (i = 0, j = 0; i < PROX_OFFSET_CAL_BUFFER_SIZE / 5; i++) {
+		if ((ret = taos_prox_poll(&prox_info_temp)) < 0) {
+			SENSOR_LOG_ERROR("failed to tmd2772_prox_read_data\n");
+		} else {
+			j++;
+			prox_sum += prox_info_temp.prox_data;
+			SENSOR_LOG_ERROR("prox_data is %d\n",prox_info_temp.prox_data);
+		}
+		mdelay(20);
+	}
 
-    if(j == 0)
-    {
-	ret = -1;
-	goto error;
-    }
+	if(j == 0) {
+		ret = -1;
+		goto error;
+	}
 
-    taos_datap->prox_uncover_data = prox_sum / j;
-    taos_datap->prox_thres_hi_min = taos_datap->prox_uncover_data + PROX_THRESHOLD_SAFE_DISTANCE;
-    taos_datap->prox_thres_hi_max = taos_datap->prox_thres_hi_min + PROX_THRESHOLD_DISTANCE / 2;
-    taos_datap->prox_thres_hi_max = (taos_datap->prox_thres_hi_max > PROX_THRESHOLD_HIGH_MAX) ? PROX_THRESHOLD_HIGH_MAX : taos_datap->prox_thres_hi_max;
-    taos_datap->prox_thres_lo_min = taos_datap->prox_uncover_data + PROX_THRESHOLD_DISTANCE;
-    taos_datap->prox_thres_lo_max = taos_datap->prox_uncover_data + PROX_THRESHOLD_DISTANCE * 2;
+	taos_datap->prox_uncover_data = prox_sum / j;
+	taos_datap->prox_thres_hi_min = taos_datap->prox_uncover_data + PROX_THRESHOLD_SAFE_DISTANCE;
+	taos_datap->prox_thres_hi_max = taos_datap->prox_thres_hi_min + PROX_THRESHOLD_DISTANCE / 2;
+	taos_datap->prox_thres_hi_max = (taos_datap->prox_thres_hi_max > PROX_THRESHOLD_HIGH_MAX) ? PROX_THRESHOLD_HIGH_MAX : taos_datap->prox_thres_hi_max;
+	taos_datap->prox_thres_lo_min = taos_datap->prox_uncover_data + PROX_THRESHOLD_DISTANCE;
+	taos_datap->prox_thres_lo_max = taos_datap->prox_uncover_data + PROX_THRESHOLD_DISTANCE * 2;
 
-    SENSOR_LOG_ERROR("prox_uncover_data = %d\n", taos_datap->prox_uncover_data);
-    SENSOR_LOG_ERROR("prox_thres_hi range is [%d--%d]\n", taos_datap->prox_thres_hi_min, taos_datap->prox_thres_hi_max);
-    SENSOR_LOG_ERROR("prox_thres_lo range is [%d--%d]\n", taos_datap->prox_thres_lo_min, taos_datap->prox_thres_lo_max);
-    taos_write_cal_file(PATH_PROX_UNCOVER_DATA, taos_datap->prox_uncover_data);
+	SENSOR_LOG_ERROR("prox_uncover_data = %d\n", taos_datap->prox_uncover_data);
+	SENSOR_LOG_ERROR("prox_thres_hi range is [%d--%d]\n", taos_datap->prox_thres_hi_min, taos_datap->prox_thres_hi_max);
+	SENSOR_LOG_ERROR("prox_thres_lo range is [%d--%d]\n", taos_datap->prox_thres_lo_min, taos_datap->prox_thres_lo_max);
+	taos_write_cal_file(PATH_PROX_UNCOVER_DATA, taos_datap->prox_uncover_data);
 
-    return 0;
+	return 0;
 
 error:
-    return ret;
+	return ret;
 }
 
 static int taos_prox_offset_cal_process(void)
 {
-    int ret;
-    int prox_sum = 0, prox_mean = 0;
-    int i = 0, j = 0;
-    u8 reg_val = 0;
-    u8 reg_cntrl = 0;
+	int ret;
+	int prox_sum = 0, prox_mean = 0;
+	int i = 0, j = 0;
+	u8 reg_val = 0;
+	u8 reg_cntrl = 0;
 
-    struct taos_prox_info *prox_cal_info = NULL;
+	struct taos_prox_info *prox_cal_info = NULL;
 	prox_cal_info = kmalloc(sizeof(struct taos_prox_info) * (PROX_OFFSET_CAL_BUFFER_SIZE), GFP_KERNEL);
-	if (NULL == prox_cal_info)
-	{
-	    SENSOR_LOG_ERROR("malloc prox_cal_info failed\n");
-	    ret = -1;
-	    goto prox_offset_cal_buffer_error;
+	if (NULL == prox_cal_info) {
+		SENSOR_LOG_ERROR("malloc prox_cal_info failed\n");
+		ret = -1;
+		goto prox_offset_cal_buffer_error;
 	}
 	memset(prox_cal_info, 0, sizeof(struct taos_prox_info) * (taos_datap->prox_calibrate_times));
 
-	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x01), taos_cfgp->prox_int_time))) < 0)
-	{
-	    SENSOR_LOG_ERROR("failed write prox_int_time reg\n");
-	    goto prox_calibrate_offset_error;
+	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x01), taos_cfgp->prox_int_time))) < 0) {
+		SENSOR_LOG_ERROR("failed write prox_int_time reg\n");
+		goto prox_calibrate_offset_error;
 	}
-	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x02), taos_cfgp->prox_adc_time))) < 0)
-	{
-	    SENSOR_LOG_ERROR("failed write prox_adc_time reg\n");
-	    goto prox_calibrate_offset_error;
+	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x02), taos_cfgp->prox_adc_time))) < 0) {
+		SENSOR_LOG_ERROR("failed write prox_adc_time reg\n");
+		goto prox_calibrate_offset_error;
 	}
-	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x03), taos_cfgp->prox_wait_time))) < 0)
-	{
-	    SENSOR_LOG_ERROR("failed write prox_wait_time reg\n");
-	    goto prox_calibrate_offset_error;
+	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x03), taos_cfgp->prox_wait_time))) < 0) {
+		SENSOR_LOG_ERROR("failed write prox_wait_time reg\n");
+		goto prox_calibrate_offset_error;
 	}
 
-	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x0D), taos_cfgp->prox_config))) < 0)
-	{
-	    SENSOR_LOG_ERROR("failed write prox_config reg\n");
-	    goto prox_calibrate_offset_error;
+	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x0D), taos_cfgp->prox_config))) < 0) {
+		SENSOR_LOG_ERROR("failed write prox_config reg\n");
+		goto prox_calibrate_offset_error;
 	}
 
-	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x0E), taos_cfgp->prox_pulse_cnt))) < 0)
-	{
-	    SENSOR_LOG_ERROR("failed write prox_pulse_cnt reg\n");
-	    goto prox_calibrate_offset_error;
+	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x0E), taos_cfgp->prox_pulse_cnt))) < 0) {
+		SENSOR_LOG_ERROR("failed write prox_pulse_cnt reg\n");
+		goto prox_calibrate_offset_error;
 	}
-	 if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x1E), taos_cfgp->prox_config_offset))) < 0) {
-	SENSOR_LOG_ERROR(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
-	return (ret);
-    }
-	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x0F), taos_cfgp->prox_gain))) < 0)
-	{
-	    SENSOR_LOG_ERROR("failed write prox_gain reg\n");
-	    goto prox_calibrate_offset_error;
+	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x1E), taos_cfgp->prox_config_offset))) < 0) {
+		SENSOR_LOG_ERROR(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
+		return (ret);
+	}
+	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x0F), taos_cfgp->prox_gain))) < 0) {
+		SENSOR_LOG_ERROR("failed write prox_gain reg\n");
+		goto prox_calibrate_offset_error;
 	}
 
 	reg_cntrl = reg_val | (TAOS_TRITON_CNTL_PROX_DET_ENBL | TAOS_TRITON_CNTL_PWRON | TAOS_TRITON_CNTL_ADC_ENBL);
-	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_CNTRL), reg_cntrl))) < 0)
-	{
-	   SENSOR_LOG_ERROR("failed write cntrl reg\n");
-	   goto prox_calibrate_offset_error;
+	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_CNTRL), reg_cntrl))) < 0) {
+		SENSOR_LOG_ERROR("failed write cntrl reg\n");
+		goto prox_calibrate_offset_error;
 	}
 
 	mdelay(30);
 
-	for (i = 0; i < (PROX_OFFSET_CAL_BUFFER_SIZE); i++)
-	{
-	    if ((ret = taos_prox_poll(&prox_cal_info[i])) < 0)
-	    {
-		   j++;
-		printk(KERN_ERR "TAOS: call to prox_poll failed in ioctl prox_calibrate\n");
-	    }
-	    prox_sum += prox_cal_info[i].prox_data;
+	for (i = 0; i < (PROX_OFFSET_CAL_BUFFER_SIZE); i++) {
+		if ((ret = taos_prox_poll(&prox_cal_info[i])) < 0) {
+			j++;
+			printk(KERN_ERR "TAOS: call to prox_poll failed in ioctl prox_calibrate\n");
+		}
+		prox_sum += prox_cal_info[i].prox_data;
 
-	    SENSOR_LOG_ERROR("prox get time %d data is %d",i,prox_cal_info[i].prox_data);
-	    mdelay(30);
+		SENSOR_LOG_ERROR("prox get time %d data is %d",i,prox_cal_info[i].prox_data);
+		mdelay(30);
 	}
 
 	prox_mean = prox_sum/(PROX_OFFSET_CAL_BUFFER_SIZE);
 	SENSOR_LOG_ERROR("TAOS:------------ taos_cfgp->prox_mean = %d\n",prox_mean );
-	 if(j != 0)
-	    goto prox_calibrate_offset_error;
+	if(j != 0)
+		goto prox_calibrate_offset_error;
 
-	  prox_config_offset_param = taos_prox_offset_calculate(prox_mean, PROX_DATA_TARGET);
+	prox_config_offset_param = taos_prox_offset_calculate(prox_mean, PROX_DATA_TARGET);
 
 	taos_cfgp->prox_config_offset = prox_config_offset_param;
 
 	if((ret=taos_write_cal_file(PATH_PROX_OFFSET,taos_cfgp->prox_config_offset)) < 0)
-	      goto prox_calibrate_offset_error;
+		goto prox_calibrate_offset_error;
 
 
-	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x1E), taos_cfgp->prox_config_offset))) < 0)
-	{
-	    SENSOR_LOG_ERROR(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
-	    return (ret);
+	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x1E), taos_cfgp->prox_config_offset))) < 0) {
+		SENSOR_LOG_ERROR(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
+		return (ret);
 	}
 
 	//read prox data register after update offset register
 	ret = taos_prox_uncover_data_get();
-	if (ret < 0)
-	{
-	 SENSOR_LOG_ERROR("failed to tmd2772_prox_uncover_data_get\n");
-	 goto prox_calibrate_offset_error;
+	if (ret < 0) {
+		SENSOR_LOG_ERROR("failed to tmd2772_prox_uncover_data_get\n");
+		goto prox_calibrate_offset_error;
 	}
 
-	for (i = 0; i < sizeof(taos_triton_reg_init); i++)
-	{
-	    if(i !=11)
-	    {
-		if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|(TAOS_TRITON_CNTRL +i)), taos_triton_reg_init[i]))) < 0)
-		{
-		    SENSOR_LOG_ERROR("failed write triton_init reg\n");
-			       goto prox_calibrate_offset_error;
+	for (i = 0; i < sizeof(taos_triton_reg_init); i++) {
+		if(i !=11) {
+			if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|(TAOS_TRITON_CNTRL +i)), taos_triton_reg_init[i]))) < 0) {
+				SENSOR_LOG_ERROR("failed write triton_init reg\n");
+				goto prox_calibrate_offset_error;
 
+			}
 		}
-	     }
-	 }
+	}
 
 
 
 
-	 kfree(prox_cal_info);
+	kfree(prox_cal_info);
 	return 1;
 prox_calibrate_offset_error:
-    SENSOR_LOG_ERROR("ERROR\n");
-	 kfree(prox_cal_info);
+	SENSOR_LOG_ERROR("ERROR\n");
+	kfree(prox_cal_info);
 prox_offset_cal_buffer_error:
 
 	return -1;
-    }
+}
 
 static void taos_prox_offset_cal_finish(void)
 {
 
-    if (true == (taos_datap->prox_on))
-    {
-	taos_prox_on();
-    }
-    else
-    {
-	taos_prox_off();
-    }
+	if (true == (taos_datap->prox_on)) {
+		taos_prox_on();
+	} else {
+		taos_prox_off();
+	}
 }
 static int taos_prox_offset_cal(void)
 {
-    int ret = 0;
-    taos_datap->prox_offset_cal_result = false;
+	int ret = 0;
+	taos_datap->prox_offset_cal_result = false;
 
-    if ((ret=taos_prox_offset_cal_prepare())<0)
-	goto error;
+	if ((ret=taos_prox_offset_cal_prepare())<0)
+		goto error;
 
-    mdelay(50);
+	mdelay(50);
 
-    if ((ret= taos_prox_offset_cal_process())>=0)
-    {
-	taos_datap->prox_offset_cal_result = true;
-    }
+	if ((ret= taos_prox_offset_cal_process())>=0) {
+		taos_datap->prox_offset_cal_result = true;
+	}
 
-    taos_prox_offset_cal_finish();
+	taos_prox_offset_cal_finish();
 
-    return ret;
+	return ret;
 error:
-    return ret;
+	return ret;
 }
 
 
 static void taos_prox_offset_cal_work_func(struct work_struct *work)
 {
-
-		taos_prox_offset_cal();
-
+	taos_prox_offset_cal();
 }
+
 static enum hrtimer_restart  taos_prox_unwakelock_work_func(struct hrtimer *timer)
 {
 	SENSOR_LOG_INFO("######## taos_prox_unwakelock_timer_func #########\n");
 	if(false == taos_datap->irq_work_status )
-	taos_wakelock_ops(&(taos_datap->proximity_wakelock),false);
+		taos_wakelock_ops(&(taos_datap->proximity_wakelock),false);
 	return HRTIMER_NORESTART;
 
 }
 
 static int taos_sensors_als_poll_on(void)
 {
-    int  ret = 0, i = 0;
-    u8   reg_val = 0, reg_cntrl = 0;
+	int  ret = 0, i = 0;
+	u8   reg_val = 0, reg_cntrl = 0;
 
-    SENSOR_LOG_INFO("######## TAOS IOCTL ALS ON #########\n");
+	SENSOR_LOG_INFO("######## TAOS IOCTL ALS ON #########\n");
 
-    for (i = 0; i < TAOS_FILTER_DEPTH; i++)
-    {
-	lux_history[i] = -ENODATA;
-    }
-
-    if (taos_datap->prox_on)
-    {
-	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_ALS_TIME), TAOS_ALS_ADC_TIME_WHEN_PROX_ON))) < 0)
-	{
-	    printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
-	    return (ret);
+	for (i = 0; i < TAOS_FILTER_DEPTH; i++) {
+		lux_history[i] = -ENODATA;
 	}
-    }
-    else
-    {
-	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_ALS_TIME), taos_cfgp->prox_int_time))) < 0)
-	{
-	    printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl als_on\n");
-	    return (ret);
+
+	if (taos_datap->prox_on) {
+		if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_ALS_TIME), TAOS_ALS_ADC_TIME_WHEN_PROX_ON))) < 0) {
+			printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
+			return (ret);
+		}
+	} else {
+		if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_ALS_TIME), taos_cfgp->prox_int_time))) < 0) {
+			printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl als_on\n");
+			return (ret);
+		}
 	}
-    }
 
-    reg_val = i2c_smbus_read_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_GAIN));
+	reg_val = i2c_smbus_read_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_GAIN));
 
-    //SENSOR_LOG_INFO("reg[0x0F] = 0x%02X\n",reg_val);
+	//SENSOR_LOG_INFO("reg[0x0F] = 0x%02X\n",reg_val);
 
-    reg_val = reg_val & 0xFC;
-    reg_val = reg_val | (taos_cfgp->gain & 0x03);//*16
-    if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_GAIN), reg_val))) < 0)
-    {
-	printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl als_on\n");
-	return (ret);
-    }
+	reg_val = reg_val & 0xFC;
+	reg_val = reg_val | (taos_cfgp->gain & 0x03);//*16
+	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_GAIN), reg_val))) < 0) {
+		printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl als_on\n");
+		return (ret);
+	}
 
-    reg_cntrl = i2c_smbus_read_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_CNTRL));
-    SENSOR_LOG_INFO("reg[0x00] = 0x%02X\n",reg_cntrl);
+	reg_cntrl = i2c_smbus_read_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_CNTRL));
+	SENSOR_LOG_INFO("reg[0x00] = 0x%02X\n",reg_cntrl);
 
-    reg_cntrl |= (TAOS_TRITON_CNTL_ADC_ENBL | TAOS_TRITON_CNTL_PWRON);
-    if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_CNTRL), reg_cntrl))) < 0)
-    {
-	printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl als_on\n");
-	return (ret);
-    }
+	reg_cntrl |= (TAOS_TRITON_CNTL_ADC_ENBL | TAOS_TRITON_CNTL_PWRON);
+	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_CNTRL), reg_cntrl))) < 0) {
+		printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl als_on\n");
+		return (ret);
+	}
 
 	schedule_delayed_work(&taos_datap->als_poll_work, msecs_to_jiffies(200));
 
-    flag_just_open_light = true;
+	flag_just_open_light = true;
 
-    taos_datap->als_on = true;
+	taos_datap->als_on = true;
 
-    taos_update_sat_als();
+	taos_update_sat_als();
 
 	return ret;
 }
 
 static int taos_sensors_als_poll_off(void)
 {
-    int  ret = 0, i = 0;
-    u8  reg_val = 0;
+	int  ret = 0, i = 0;
+	u8  reg_val = 0;
 
-    SENSOR_LOG_INFO("######## TAOS IOCTL ALS OFF #########\n");
+	SENSOR_LOG_INFO("######## TAOS IOCTL ALS OFF #########\n");
 
-    for (i = 0; i < TAOS_FILTER_DEPTH; i++)
-    {
-	lux_history[i] = -ENODATA;
-    }
-
-    reg_val = i2c_smbus_read_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_CNTRL));
-
-    //SENSOR_LOG_INFO("reg[0x00] = 0x%02X\n",reg_val);
-
-    if ((reg_val & TAOS_TRITON_CNTL_PROX_DET_ENBL) == 0x00 && (0 == taos_datap->prox_on))
-    {
-	SENSOR_LOG_INFO("TAOS_TRITON_CNTL_PROX_DET_ENBL = 0\n");
-	reg_val = 0x00;
-	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_CNTRL), reg_val))) < 0)
-	{
-	   printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl als_off\n");
-	   return (ret);
+	for (i = 0; i < TAOS_FILTER_DEPTH; i++) {
+		lux_history[i] = -ENODATA;
 	}
 
-    }
+	reg_val = i2c_smbus_read_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_CNTRL));
 
-    if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|TAOS_TRITON_ALS_TIME), 0XFF))) < 0)
-    {
-       printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
-       return (ret);
-    }
+	//SENSOR_LOG_INFO("reg[0x00] = 0x%02X\n",reg_val);
 
-    taos_datap->als_on = false;
+	if ((reg_val & TAOS_TRITON_CNTL_PROX_DET_ENBL) == 0x00 && (0 == taos_datap->prox_on)) {
+		SENSOR_LOG_INFO("TAOS_TRITON_CNTL_PROX_DET_ENBL = 0\n");
+		reg_val = 0x00;
+		if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_CNTRL), reg_val))) < 0) {
+			printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl als_off\n");
+			return (ret);
+		}
 
-    cancel_delayed_work_sync(&taos_datap->als_poll_work);
+	}
 
-    taos_update_sat_als();
+	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|TAOS_TRITON_ALS_TIME), 0XFF))) < 0) {
+		printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
+		return (ret);
+	}
 
-    return (ret);
+	taos_datap->als_on = false;
+
+	cancel_delayed_work_sync(&taos_datap->als_poll_work);
+
+	taos_update_sat_als();
+
+	return (ret);
 }
 
 static int taos_prox_on(void)
 {
-    int prox_sum = 0, prox_mean = 0, prox_max = 0;
-    int  ret = 0;
-    u8 reg_cntrl = 0, i = 0 ,j = 0;
+	int prox_sum = 0, prox_mean = 0, prox_max = 0;
+	int  ret = 0;
+	u8 reg_cntrl = 0, i = 0 ,j = 0;
 
-    taos_datap->prox_on = 1;
-    als_poll_time_mul = 2;
+	taos_datap->prox_on = 1;
+	als_poll_time_mul = 2;
 
-    SENSOR_LOG_INFO("######## TAOS IOCTL PROX ON  ######## \n");
+	SENSOR_LOG_INFO("######## TAOS IOCTL PROX ON  ######## \n");
 
-    if (true==taos_datap->als_on)
-    {
-	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x01), TAOS_ALS_ADC_TIME_WHEN_PROX_ON))) < 0)
-	{
-	    printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
-	    return (ret);
+	if (true==taos_datap->als_on) {
+		if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x01), TAOS_ALS_ADC_TIME_WHEN_PROX_ON))) < 0) {
+			printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
+			return (ret);
+		}
+	} else {
+		if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x01), 0XFF))) < 0) {
+			printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
+			return (ret);
+		}
 	}
-    }
-    else
-    {
-	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x01), 0XFF))) < 0)
-	{
-	    printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
-	    return (ret);
+
+	taos_update_sat_als();
+
+	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x02), taos_cfgp->prox_adc_time))) < 0) {
+		printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
+		return (ret);
 	}
-    }
+	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x03), taos_cfgp->prox_wait_time))) < 0) {
+		printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
+		return (ret);
+	}
 
-    taos_update_sat_als();
-
-    if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x02), taos_cfgp->prox_adc_time))) < 0) {
-	printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
-	return (ret);
-    }
-    if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x03), taos_cfgp->prox_wait_time))) < 0) {
-	printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
-	return (ret);
-    }
-
-    if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x0C), taos_cfgp->prox_intr_filter))) < 0) {
-	printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
-	return (ret);
-    }
-    if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x0D), taos_cfgp->prox_config))) < 0) {
-	printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
-	return (ret);
-    }
-    if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x0E), taos_cfgp->prox_pulse_cnt))) < 0) {
-	printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
-	return (ret);
-    }
-    if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x0F), taos_cfgp->prox_gain))) < 0) {
-	printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
-	return (ret);
-    }
-    if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x1E), taos_cfgp->prox_config_offset))) < 0) {
-	SENSOR_LOG_ERROR(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
-	return (ret);
-    }
-    reg_cntrl = TAOS_TRITON_CNTL_PROX_DET_ENBL | TAOS_TRITON_CNTL_PWRON    | TAOS_TRITON_CNTL_PROX_INT_ENBL |
-							 TAOS_TRITON_CNTL_ADC_ENBL | TAOS_TRITON_CNTL_WAIT_TMR_ENBL  ;
-    if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_CNTRL), reg_cntrl))) < 0)
-    {
-	printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
-	return (ret);
-    }
+	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x0C), taos_cfgp->prox_intr_filter))) < 0) {
+		printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
+		return (ret);
+	}
+	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x0D), taos_cfgp->prox_config))) < 0) {
+		printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
+		return (ret);
+	}
+	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x0E), taos_cfgp->prox_pulse_cnt))) < 0) {
+		printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
+		return (ret);
+	}
+	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x0F), taos_cfgp->prox_gain))) < 0) {
+		printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
+		return (ret);
+	}
+	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x1E), taos_cfgp->prox_config_offset))) < 0) {
+		SENSOR_LOG_ERROR(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
+		return (ret);
+	}
+	reg_cntrl = TAOS_TRITON_CNTL_PROX_DET_ENBL | TAOS_TRITON_CNTL_PWRON    | TAOS_TRITON_CNTL_PROX_INT_ENBL |
+		TAOS_TRITON_CNTL_ADC_ENBL | TAOS_TRITON_CNTL_WAIT_TMR_ENBL  ;
+	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_CNTRL), reg_cntrl))) < 0) {
+		printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
+		return (ret);
+	}
 	pro_ft = true;
-    if (taos_datap->prox_calibrate_flag)
-    {
-	prox_sum = 0;
-	prox_max = 0;
+	if (taos_datap->prox_calibrate_flag) {
+		prox_sum = 0;
+		prox_max = 0;
 
-	mdelay(20);
-	for (i = 0, j = 0; i < 5; i++)
-	{
-	    if ((ret = taos_prox_poll(&prox_cal_info[i])) < 0)
-	    {
-		j++;
-		printk(KERN_ERR "TAOS: call to prox_poll failed in ioctl prox_calibrate\n");
-	    }
-	    prox_sum += prox_cal_info[i].prox_data;
-	    if (prox_cal_info[i].prox_data > prox_max)
-		prox_max = prox_cal_info[i].prox_data;
-	    mdelay(20);
+		mdelay(20);
+		for (i = 0, j = 0; i < 5; i++) {
+			if ((ret = taos_prox_poll(&prox_cal_info[i])) < 0) {
+				j++;
+				printk(KERN_ERR "TAOS: call to prox_poll failed in ioctl prox_calibrate\n");
+			}
+			prox_sum += prox_cal_info[i].prox_data;
+			if (prox_cal_info[i].prox_data > prox_max)
+				prox_max = prox_cal_info[i].prox_data;
+			mdelay(20);
+		}
+
+		prox_mean = prox_sum/5;
+		if (j==0) {
+			taos_cfgp->prox_threshold_hi = prox_mean + PROX_THRESHOLD_SAFE_DISTANCE;
+			taos_cfgp->prox_threshold_hi = (taos_cfgp->prox_threshold_hi > PROX_THRESHOLD_HIGH_MIN) ? taos_cfgp->prox_threshold_hi : PROX_THRESHOLD_HIGH_MIN;
+			taos_cfgp->prox_threshold_hi = (taos_cfgp->prox_threshold_hi > taos_datap->prox_thres_hi_min) ? taos_cfgp->prox_threshold_hi : taos_datap->prox_thres_hi_min;
+			taos_cfgp->prox_threshold_lo = taos_cfgp->prox_threshold_hi - PROX_THRESHOLD_DISTANCE;
+
+			if( prox_mean >800 || taos_cfgp->prox_threshold_hi > 1000 || taos_cfgp->prox_threshold_lo > 900) {
+				taos_cfgp->prox_threshold_hi= 800;
+				taos_cfgp->prox_threshold_lo = taos_cfgp->prox_threshold_hi - PROX_THRESHOLD_DISTANCE;
+			}
+
+			SENSOR_LOG_INFO("prox_threshold_hi = %d\n",taos_cfgp->prox_threshold_hi );
+			SENSOR_LOG_INFO("prox_threshold_lo = %d\n",taos_cfgp->prox_threshold_lo );
+
+			input_report_rel(taos_datap->p_idev, REL_Y, taos_cfgp->prox_threshold_hi);
+			input_report_rel(taos_datap->p_idev, REL_Z, taos_cfgp->prox_threshold_lo);
+			input_sync(taos_datap->p_idev);
+		}
 	}
-
-	prox_mean = prox_sum/5;
-	if (j==0)
-	{
-	    taos_cfgp->prox_threshold_hi = prox_mean + PROX_THRESHOLD_SAFE_DISTANCE;
-	    taos_cfgp->prox_threshold_hi = (taos_cfgp->prox_threshold_hi > PROX_THRESHOLD_HIGH_MIN) ? taos_cfgp->prox_threshold_hi : PROX_THRESHOLD_HIGH_MIN;
-	    taos_cfgp->prox_threshold_hi = (taos_cfgp->prox_threshold_hi > taos_datap->prox_thres_hi_min) ? taos_cfgp->prox_threshold_hi : taos_datap->prox_thres_hi_min;
-	    taos_cfgp->prox_threshold_lo = taos_cfgp->prox_threshold_hi - PROX_THRESHOLD_DISTANCE;
-
-	    if( prox_mean >800 || taos_cfgp->prox_threshold_hi > 1000 || taos_cfgp->prox_threshold_lo > 900)
-	    {
-		taos_cfgp->prox_threshold_hi= 800;
-		taos_cfgp->prox_threshold_lo = taos_cfgp->prox_threshold_hi - PROX_THRESHOLD_DISTANCE;
-	    }
-
-	    SENSOR_LOG_INFO("prox_threshold_hi = %d\n",taos_cfgp->prox_threshold_hi );
-	    SENSOR_LOG_INFO("prox_threshold_lo = %d\n",taos_cfgp->prox_threshold_lo );
-
-	    input_report_rel(taos_datap->p_idev, REL_Y, taos_cfgp->prox_threshold_hi);
-	    input_report_rel(taos_datap->p_idev, REL_Z, taos_cfgp->prox_threshold_lo);
-	    input_sync(taos_datap->p_idev);
-	}
-    }
-    taos_prox_threshold_set();
-    taos_irq_ops(true, true);
-    return (ret);
+	taos_prox_threshold_set();
+	taos_irq_ops(true, true);
+	return (ret);
 }
 
 
 static int taos_prox_off(void)
 {
-    int ret = 0;
-    SENSOR_LOG_INFO("########  TAOS IOCTL PROX OFF  ########\n");
+	int ret = 0;
+	SENSOR_LOG_INFO("########  TAOS IOCTL PROX OFF  ########\n");
 
-    if (true == (taos_datap->proximity_wakelock).locked)
-    {
-	  hrtimer_cancel(&taos_datap->prox_unwakelock_timer);
-	taos_wakelock_ops(&(taos_datap->proximity_wakelock), false);
-    }
-
-    if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_CNTRL), 0x00))) < 0)
-    {
-	printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl als_off\n");
-	return (ret);
-    }
-
-    taos_datap->prox_on = 0;
-    als_poll_time_mul = 1;
-
-	if (true == taos_datap->als_on)
-    {
-	taos_sensors_als_poll_on();
+	if (true == (taos_datap->proximity_wakelock).locked) {
+		hrtimer_cancel(&taos_datap->prox_unwakelock_timer);
+		taos_wakelock_ops(&(taos_datap->proximity_wakelock), false);
 	}
 
-   // cancel_work_sync(&taos_datap->irq_work);
-    if (true == taos_datap->irq_enabled)
-    {
-	taos_irq_ops(false, true);
-    }
+	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_CNTRL), 0x00))) < 0) {
+		printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl als_off\n");
+		return (ret);
+	}
+
+	taos_datap->prox_on = 0;
+	als_poll_time_mul = 1;
+
+	if (true == taos_datap->als_on) {
+		taos_sensors_als_poll_on();
+	}
+
+	// cancel_work_sync(&taos_datap->irq_work);
+	if (true == taos_datap->irq_enabled) {
+		taos_irq_ops(false, true);
+	}
 
 
-    return (ret);
+	return (ret);
 }
 
 
 static int taos_prox_calibrate(void)
 {
-    int ret;
-    int prox_sum = 0, prox_mean = 0, prox_max = 0,prox_min = 1024;
-    u8 reg_cntrl = 0;
-    u8 reg_val = 0;
-    int i = 0, j = 0;
+	int ret;
+	int prox_sum = 0, prox_mean = 0, prox_max = 0,prox_min = 1024;
+	u8 reg_cntrl = 0;
+	u8 reg_val = 0;
+	int i = 0, j = 0;
 
-    struct taos_prox_info *prox_cal_info = NULL;
+	struct taos_prox_info *prox_cal_info = NULL;
 	prox_cal_info = kmalloc(sizeof(struct taos_prox_info) * (taos_datap->prox_calibrate_times), GFP_KERNEL);
-	if (NULL == prox_cal_info)
-	{
-	    SENSOR_LOG_ERROR("malloc prox_cal_info failed\n");
-	    ret = -1;
-	    goto prox_calibrate_error1;
+	if (NULL == prox_cal_info) {
+		SENSOR_LOG_ERROR("malloc prox_cal_info failed\n");
+		ret = -1;
+		goto prox_calibrate_error1;
 	}
 	memset(prox_cal_info, 0, sizeof(struct taos_prox_info) * (taos_datap->prox_calibrate_times));
 
-	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x01), taos_cfgp->prox_int_time))) < 0)
-	{
-	    SENSOR_LOG_ERROR("failed write prox_int_time reg\n");
-	    goto prox_calibrate_error;
+	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x01), taos_cfgp->prox_int_time))) < 0) {
+		SENSOR_LOG_ERROR("failed write prox_int_time reg\n");
+		goto prox_calibrate_error;
 	}
-	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x02), taos_cfgp->prox_adc_time))) < 0)
-	{
-	    SENSOR_LOG_ERROR("failed write prox_adc_time reg\n");
-	    goto prox_calibrate_error;
+	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x02), taos_cfgp->prox_adc_time))) < 0) {
+		SENSOR_LOG_ERROR("failed write prox_adc_time reg\n");
+		goto prox_calibrate_error;
 	}
-	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x03), taos_cfgp->prox_wait_time))) < 0)
-	{
-	    SENSOR_LOG_ERROR("failed write prox_wait_time reg\n");
-	    goto prox_calibrate_error;
+	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x03), taos_cfgp->prox_wait_time))) < 0) {
+		SENSOR_LOG_ERROR("failed write prox_wait_time reg\n");
+		goto prox_calibrate_error;
 	}
 
-	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x0D), taos_cfgp->prox_config))) < 0)
-	{
-	    SENSOR_LOG_ERROR("failed write prox_config reg\n");
-	    goto prox_calibrate_error;
+	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x0D), taos_cfgp->prox_config))) < 0) {
+		SENSOR_LOG_ERROR("failed write prox_config reg\n");
+		goto prox_calibrate_error;
 	}
 
-	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x0E), taos_cfgp->prox_pulse_cnt))) < 0)
-	{
-	    SENSOR_LOG_ERROR("failed write prox_pulse_cnt reg\n");
-	    goto prox_calibrate_error;
+	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x0E), taos_cfgp->prox_pulse_cnt))) < 0) {
+		SENSOR_LOG_ERROR("failed write prox_pulse_cnt reg\n");
+		goto prox_calibrate_error;
 	}
-	 if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x1E), taos_cfgp->prox_config_offset))) < 0) {
-	SENSOR_LOG_ERROR(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
-	return (ret);
-    }
-	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x0F), taos_cfgp->prox_gain))) < 0)
-	{
-	    SENSOR_LOG_ERROR("failed write prox_gain reg\n");
-	    goto prox_calibrate_error;
+	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x1E), taos_cfgp->prox_config_offset))) < 0) {
+		SENSOR_LOG_ERROR(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
+		return (ret);
+	}
+	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x0F), taos_cfgp->prox_gain))) < 0) {
+		SENSOR_LOG_ERROR("failed write prox_gain reg\n");
+		goto prox_calibrate_error;
 	}
 
 	reg_cntrl = reg_val | (TAOS_TRITON_CNTL_PROX_DET_ENBL | TAOS_TRITON_CNTL_PWRON | TAOS_TRITON_CNTL_ADC_ENBL);
-	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_CNTRL), reg_cntrl))) < 0)
-	{
-	   SENSOR_LOG_ERROR("failed write cntrl reg\n");
-	   goto prox_calibrate_error;
+	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_CNTRL), reg_cntrl))) < 0) {
+		SENSOR_LOG_ERROR("failed write cntrl reg\n");
+		goto prox_calibrate_error;
 	}
 
 	prox_sum = 0;
 	prox_max = 0;
 	prox_min =1024;
 	mdelay(30);
-	for (i = 0; i < (taos_datap->prox_calibrate_times); i++)
-	{
-	    if ((ret = taos_prox_poll(&prox_cal_info[i])) < 0)
-	    {
-		   j++;
-		printk(KERN_ERR "TAOS: call to prox_poll failed in ioctl prox_calibrate\n");
-	    }
-	    prox_sum += prox_cal_info[i].prox_data;
-	    if (prox_cal_info[i].prox_data > prox_max)
-		prox_max = prox_cal_info[i].prox_data;
-	    if (prox_cal_info[i].prox_data < prox_min)
-		prox_min = prox_cal_info[i].prox_data;
-	    SENSOR_LOG_ERROR("prox get time %d data is %d",i,prox_cal_info[i].prox_data);
-	    mdelay(30);
+	for (i = 0; i < (taos_datap->prox_calibrate_times); i++) {
+		if ((ret = taos_prox_poll(&prox_cal_info[i])) < 0) {
+			j++;
+			printk(KERN_ERR "TAOS: call to prox_poll failed in ioctl prox_calibrate\n");
+		}
+		prox_sum += prox_cal_info[i].prox_data;
+		if (prox_cal_info[i].prox_data > prox_max)
+			prox_max = prox_cal_info[i].prox_data;
+		if (prox_cal_info[i].prox_data < prox_min)
+			prox_min = prox_cal_info[i].prox_data;
+		SENSOR_LOG_ERROR("prox get time %d data is %d",i,prox_cal_info[i].prox_data);
+		mdelay(30);
 	}
 
 	prox_mean = prox_sum/(taos_datap->prox_calibrate_times);
-	    if(j == 0)
-		{
-	    taos_cfgp->prox_threshold_hi = ((((prox_max - prox_mean) * prox_calibrate_hi_param) + 50)/100) + prox_mean+120;
-	    taos_cfgp->prox_threshold_lo = ((((prox_max - prox_mean) * prox_calibrate_lo_param) + 50)/100) + prox_mean+40;
-		}
+	if(j == 0) {
+		taos_cfgp->prox_threshold_hi = ((((prox_max - prox_mean) * prox_calibrate_hi_param) + 50)/100) + prox_mean+120;
+		taos_cfgp->prox_threshold_lo = ((((prox_max - prox_mean) * prox_calibrate_lo_param) + 50)/100) + prox_mean+40;
+	}
 
-		if( prox_mean >700 || taos_cfgp->prox_threshold_hi > 1000 || taos_cfgp->prox_threshold_lo > 900)
-			{
-			 taos_cfgp->prox_threshold_hi = prox_threshold_hi_param;
-			taos_cfgp->prox_threshold_lo = prox_threshold_lo_param;
-			prox_config_offset_param=0x0;
-			taos_cfgp->prox_config_offset = prox_config_offset_param;
-			}
+	if( prox_mean >700 || taos_cfgp->prox_threshold_hi > 1000 || taos_cfgp->prox_threshold_lo > 900) {
+		taos_cfgp->prox_threshold_hi = prox_threshold_hi_param;
+		taos_cfgp->prox_threshold_lo = prox_threshold_lo_param;
+		prox_config_offset_param=0x0;
+		taos_cfgp->prox_config_offset = prox_config_offset_param;
+	}
 	SENSOR_LOG_ERROR("TAOS:------------ taos_cfgp->prox_threshold_hi = %d\n",taos_cfgp->prox_threshold_hi );
 	SENSOR_LOG_ERROR("TAOS:------------ taos_cfgp->prox_threshold_lo = %d\n",taos_cfgp->prox_threshold_lo );
 	SENSOR_LOG_ERROR("TAOS:------------ taos_cfgp->prox_mean = %d\n",prox_mean );
 	SENSOR_LOG_ERROR("TAOS:------------ taos_cfgp->prox_max = %d\n",prox_max );
-	    SENSOR_LOG_ERROR("TAOS:------------ taos_cfgp->prox_min = %d\n",prox_min );
+	SENSOR_LOG_ERROR("TAOS:------------ taos_cfgp->prox_min = %d\n",prox_min );
 
-	for (i = 0; i < sizeof(taos_triton_reg_init); i++)
-	{
-	    if(i !=11)
-	    {
-		if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|(TAOS_TRITON_CNTRL +i)), taos_triton_reg_init[i]))) < 0)
-		{
-		    SENSOR_LOG_ERROR("failed write triton_init reg\n");
-			       goto prox_calibrate_error;
+	for (i = 0; i < sizeof(taos_triton_reg_init); i++) {
+		if(i !=11) {
+			if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|(TAOS_TRITON_CNTRL +i)), taos_triton_reg_init[i]))) < 0) {
+				SENSOR_LOG_ERROR("failed write triton_init reg\n");
+				goto prox_calibrate_error;
 
+			}
 		}
-	     }
-	 }
+	}
 
 	input_report_rel(taos_datap->p_idev, REL_Y, taos_cfgp->prox_threshold_hi);
 	input_report_rel(taos_datap->p_idev, REL_Z, taos_cfgp->prox_threshold_lo);
 	input_sync(taos_datap->p_idev);
-	 kfree(prox_cal_info);
+	kfree(prox_cal_info);
 	return 1;
 prox_calibrate_error:
-    SENSOR_LOG_ERROR("exit\n");
-	 kfree(prox_cal_info);
+	SENSOR_LOG_ERROR("exit\n");
+	kfree(prox_cal_info);
 prox_calibrate_error1:
 
 	return -1;
-    }
+}
 
 
 MODULE_AUTHOR("John Koshi - Surya Software");
