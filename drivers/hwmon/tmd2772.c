@@ -144,8 +144,8 @@
 #define CHIP_ID                         0x3d
 
 #define TAOS_INPUT_NAME                 "lightsensor"
-#define	POLL_DELAY	                    msecs_to_jiffies(5)
-#define	TAOS_ALS_ADC_TIME_WHEN_PROX_ON	0xF0//0XF5//0XEB
+#define POLL_DELAY	                    msecs_to_jiffies(5)
+#define TAOS_ALS_ADC_TIME_WHEN_PROX_ON	0xF0//0XF5//0XEB
 #define TAOS_ALS_GAIN_DIVIDE            1000
 #define TAOS_ALS_GAIN_1X                0
 #define TAOS_ALS_GAIN_8X                1
@@ -1950,7 +1950,7 @@ static ssize_t attr_prox_calibrate_verify_store(struct device *dev,
 
 
 static struct device_attribute attrs_light[] = {
-	__ATTR(enable,                         0640,   attr_als_enable_show,                       attr_als_enable_store),
+    __ATTR(enable,                         0640,   attr_als_enable_show,                       attr_als_enable_store),
     __ATTR(light_gain,                     0644,   attr_get_als_gain,                          attr_set_als_gain),
     __ATTR(light_debug,                    0644,   attr_get_als_debug,                         attr_set_als_debug),
     __ATTR(light_adc_time,                 0644,   attr_get_als_adc_time,                      attr_set_als_adc_time),
@@ -1963,9 +1963,9 @@ static struct device_attribute attrs_light[] = {
 
 static struct device_attribute attrs_prox[] = {
     __ATTR(chip_name,                      0640,   attr_chip_name_show,                        NULL),
-	__ATTR(enable,                         0640,   attr_prox_enable_show,                      attr_prox_enable_store),
-	__ATTR(prox_init,                      0640,   attr_prox_init_show,                        attr_prox_init_store),
-	__ATTR(prox_led_pluse_cnt,             0644,   attr_get_prox_led_pluse_cnt,                attr_set_prox_led_pluse_cnt),
+    __ATTR(enable,                         0640,   attr_prox_enable_show,                      attr_prox_enable_store),
+    __ATTR(prox_init,                      0640,   attr_prox_init_show,                        attr_prox_init_store),
+    __ATTR(prox_led_pluse_cnt,             0644,   attr_get_prox_led_pluse_cnt,                attr_set_prox_led_pluse_cnt),
     __ATTR(prox_adc_time,                  0644,   attr_get_prox_adc_time,                     attr_set_prox_adc_time),
     __ATTR(prox_led_strength_level,        0644,   attr_get_prox_led_strength_level,           attr_set_prox_led_strength_level),
     __ATTR(prox_debug_delay,               0644,   attr_get_prox_debug_delay,                  attr_set_prox_debug_delay),
@@ -2608,217 +2608,195 @@ static int tmd2772_chip_detect(struct taos_data *chip)
 // client probe
 static int __devinit tmd2772_probe(struct i2c_client *clientp, const struct i2c_device_id *idp)
 {
-    int ret = 0;
-    int i = 0;
-    unsigned char buf[TAOS_MAX_DEVICE_REGS];
-    char *device_name;
-    SENSOR_LOG_INFO("Prob Start\n");
+	int ret = 0;
+	int i = 0;
+	unsigned char buf[TAOS_MAX_DEVICE_REGS];
+	char *device_name;
+	SENSOR_LOG_INFO("Prob Start\n");
 
-    if (!i2c_check_functionality(clientp->adapter, I2C_FUNC_SMBUS_BYTE_DATA))
-    {
-	SENSOR_LOG_ERROR("i2c smbus byte data functions unsupported\n");
-	return -EOPNOTSUPP;
-    }
+	if (!i2c_check_functionality(clientp->adapter, I2C_FUNC_SMBUS_BYTE_DATA)) {
+		SENSOR_LOG_ERROR("i2c smbus byte data functions unsupported\n");
+		return -EOPNOTSUPP;
+	}
 
-    taos_datap = kmalloc(sizeof(struct taos_data), GFP_KERNEL);
-    if (!taos_datap)
-    {
-	 SENSOR_LOG_ERROR("kmalloc for struct taos_data failed\n");
-	 return -ENOMEM;
-    }
+	taos_datap = kmalloc(sizeof(struct taos_data), GFP_KERNEL);
+	if (!taos_datap) {
+		SENSOR_LOG_ERROR("kmalloc for struct taos_data failed\n");
+		return -ENOMEM;
+	}
 
-    taos_datap->client = clientp;
+	taos_datap->client = clientp;
 
-    i2c_set_clientdata(clientp, taos_datap);
+	i2c_set_clientdata(clientp, taos_datap);
 
-    ret = tmd2772_power_init(taos_datap, 1);
-	if (ret < 0)
-    {
+	ret = tmd2772_power_init(taos_datap, 1);
+	if (ret < 0) {
 		goto power_init_failed;
-    }
+	}
 
-    msleep(10);
+	msleep(10);
 
-    ret = tmd2772_chip_detect(taos_datap);
-    if (ret)
-    {
-	goto read_chip_id_failed;
-    }
+	ret = tmd2772_chip_detect(taos_datap);
+	if (ret) {
+		goto read_chip_id_failed;
+	}
 
-
-    INIT_WORK(&(taos_datap->irq_work),taos_irq_work_func);
+	INIT_WORK(&(taos_datap->irq_work),taos_irq_work_func);
 
 	sema_init(&taos_datap->update_lock,1);
 	mutex_init(&(taos_datap->lock));
-    wake_lock_init(&taos_datap->proximity_wakelock.lock, WAKE_LOCK_SUSPEND, "proximity-wakelock");
+	wake_lock_init(&taos_datap->proximity_wakelock.lock, WAKE_LOCK_SUSPEND, "proximity-wakelock");
 
-    tmd2772_parse_dt(taos_datap);
+	tmd2772_parse_dt(taos_datap);
 
-    tmd2772_data_init();
+	tmd2772_data_init();
 
-    for (i = 0; i < TAOS_MAX_DEVICE_REGS; i++)
-    {
-	if ((ret = (i2c_smbus_write_byte(clientp, (TAOS_TRITON_CMD_REG | (TAOS_TRITON_CNTRL + i))))) < 0)
-	{
-	    printk(KERN_ERR "TAOS: i2c_smbus_write_byte() to control reg failed in taos_probe()\n");
-	    return(ret);
+	for (i = 0; i < TAOS_MAX_DEVICE_REGS; i++) {
+		if ((ret = (i2c_smbus_write_byte(clientp, (TAOS_TRITON_CMD_REG | (TAOS_TRITON_CNTRL + i))))) < 0) {
+			printk(KERN_ERR "TAOS: i2c_smbus_write_byte() to control reg failed in taos_probe()\n");
+			return(ret);
+		}
+		buf[i] = i2c_smbus_read_byte(clientp);
 	}
-	buf[i] = i2c_smbus_read_byte(clientp);
-    }
 
-    if ((ret = taos_device_name(buf, &device_name)) == 0)
-    {
-	printk(KERN_ERR "TAOS: chip id that was read found mismatched by taos_device_name(), in taos_probe()\n");
-	return -ENODEV;
-    }
-    if (strcmp(device_name, TAOS_DEVICE_ID))
-    {
-	printk(KERN_ERR "TAOS: chip id that was read does not match expected id in taos_probe()\n");
-	return -ENODEV;
-    }
-    else
-    {
-	SENSOR_LOG_ERROR( "TAOS: chip id of %s that was read matches expected id in taos_probe()\n", device_name);
-	device_found = 1;
-    }
-    if ((ret = (i2c_smbus_write_byte(clientp, (TAOS_TRITON_CMD_REG | TAOS_TRITON_CNTRL)))) < 0) {
-	printk(KERN_ERR "TAOS: i2c_smbus_write_byte() to control reg failed in taos_probe()\n");
-	return(ret);
-    }
-    strlcpy(clientp->name, TAOS_DEVICE_ID, I2C_NAME_SIZE);
-    strlcpy(taos_datap->taos_name, TAOS_DEVICE_ID, TAOS_ID_NAME_SIZE);
-    taos_datap->valid = 0;
-    if (!(taos_cfgp = kmalloc(sizeof(struct taos_cfg), GFP_KERNEL))) {
-	printk(KERN_ERR "TAOS: kmalloc for struct taos_cfg failed in taos_probe()\n");
-	return -ENOMEM;
-    }
-    taos_cfgp->calibrate_target = calibrate_target_param;
-    taos_cfgp->als_time = als_time_param;
-    taos_cfgp->scale_factor_als = scale_factor_param_als;
+	if ((ret = taos_device_name(buf, &device_name)) == 0) {
+		printk(KERN_ERR "TAOS: chip id that was read found mismatched by taos_device_name(), in taos_probe()\n");
+		return -ENODEV;
+	}
+	if (strcmp(device_name, TAOS_DEVICE_ID)) {
+		printk(KERN_ERR "TAOS: chip id that was read does not match expected id in taos_probe()\n");
+		return -ENODEV;
+	} else {
+		SENSOR_LOG_ERROR( "TAOS: chip id of %s that was read matches expected id in taos_probe()\n", device_name);
+		device_found = 1;
+	}
+	if ((ret = (i2c_smbus_write_byte(clientp, (TAOS_TRITON_CMD_REG | TAOS_TRITON_CNTRL)))) < 0) {
+		printk(KERN_ERR "TAOS: i2c_smbus_write_byte() to control reg failed in taos_probe()\n");
+		return(ret);
+	}
+	strlcpy(clientp->name, TAOS_DEVICE_ID, I2C_NAME_SIZE);
+	strlcpy(taos_datap->taos_name, TAOS_DEVICE_ID, TAOS_ID_NAME_SIZE);
+	taos_datap->valid = 0;
+	if (!(taos_cfgp = kmalloc(sizeof(struct taos_cfg), GFP_KERNEL))) {
+		printk(KERN_ERR "TAOS: kmalloc for struct taos_cfg failed in taos_probe()\n");
+		return -ENOMEM;
+	}
+	taos_cfgp->calibrate_target = calibrate_target_param;
+	taos_cfgp->als_time = als_time_param;
+	taos_cfgp->scale_factor_als = scale_factor_param_als;
 	taos_cfgp->scale_factor_prox = scale_factor_param_prox;
-    taos_cfgp->gain_trim = gain_trim_param;
-    taos_cfgp->filter_history = filter_history_param;
-    taos_cfgp->filter_count = filter_count_param;
-    taos_cfgp->gain = gain_param;
-    taos_cfgp->als_threshold_hi = als_threshold_hi_param;//iVIZM
-    taos_cfgp->als_threshold_lo = als_threshold_lo_param;//iVIZM
-    taos_cfgp->prox_threshold_hi = prox_threshold_hi_param;
-    taos_cfgp->prox_threshold_lo = prox_threshold_lo_param;
-    taos_cfgp->prox_int_time = prox_int_time_param;
-    taos_cfgp->prox_adc_time = prox_adc_time_param;
-    taos_cfgp->prox_wait_time = prox_wait_time_param;
-    taos_cfgp->prox_intr_filter = prox_intr_filter_param;
-    taos_cfgp->prox_config = prox_config_param;
-    taos_cfgp->prox_pulse_cnt = prox_pulse_cnt_param;
-    taos_cfgp->prox_gain = prox_gain_param;
-    taos_cfgp->prox_config_offset=prox_config_offset_param;
-    sat_als = (256 - taos_cfgp->prox_int_time) << 10;
-    sat_prox = (256 - taos_cfgp->prox_adc_time) << 10;
+	taos_cfgp->gain_trim = gain_trim_param;
+	taos_cfgp->filter_history = filter_history_param;
+	taos_cfgp->filter_count = filter_count_param;
+	taos_cfgp->gain = gain_param;
+	taos_cfgp->als_threshold_hi = als_threshold_hi_param;//iVIZM
+	taos_cfgp->als_threshold_lo = als_threshold_lo_param;//iVIZM
+	taos_cfgp->prox_threshold_hi = prox_threshold_hi_param;
+	taos_cfgp->prox_threshold_lo = prox_threshold_lo_param;
+	taos_cfgp->prox_int_time = prox_int_time_param;
+	taos_cfgp->prox_adc_time = prox_adc_time_param;
+	taos_cfgp->prox_wait_time = prox_wait_time_param;
+	taos_cfgp->prox_intr_filter = prox_intr_filter_param;
+	taos_cfgp->prox_config = prox_config_param;
+	taos_cfgp->prox_pulse_cnt = prox_pulse_cnt_param;
+	taos_cfgp->prox_gain = prox_gain_param;
+	taos_cfgp->prox_config_offset=prox_config_offset_param;
+	sat_als = (256 - taos_cfgp->prox_int_time) << 10;
+	sat_prox = (256 - taos_cfgp->prox_adc_time) << 10;
 
-    /*dmobile ::power down for init ,Rambo liu*/
-    SENSOR_LOG_ERROR("TAOS:Rambo::light sensor will pwr down \n");
-    if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x00), 0x00))) < 0) {
-	printk(KERN_ERR "TAOS:Rambo, i2c_smbus_write_byte_data failed in power down\n");
-	return (ret);
-    }
-
-
-    taos_datap->irq_work_queue = create_singlethread_workqueue("taos_work_queue");
-    if (!taos_datap->irq_work_queue)
-    {
-	ret = -ENOMEM;
-	SENSOR_LOG_INFO( "---------%s: %d: cannot create work taos_work_queue, err = %d",__func__,__LINE__,ret);
-	return ret;
-    }
-
-    ret = gpio_request(taos_datap->irq_pin_num, "ALS_PS_INT");
-    if (ret)
-    {
-	SENSOR_LOG_INFO("gpio %d is busy and then to free it\n",taos_datap->irq_pin_num);
-
-	gpio_free(taos_datap->irq_pin_num);
-	ret = gpio_request(taos_datap->irq_pin_num, "ALS_PS_INT");
-	if (ret)
-	{
-	    SENSOR_LOG_INFO("gpio %d is busy and then to free it\n",taos_datap->irq_pin_num);
-	    return ret;
+	/*dmobile ::power down for init ,Rambo liu*/
+	SENSOR_LOG_ERROR("TAOS:Rambo::light sensor will pwr down \n");
+	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x00), 0x00))) < 0) {
+		printk(KERN_ERR "TAOS:Rambo, i2c_smbus_write_byte_data failed in power down\n");
+		return (ret);
 	}
-    }
-    else
-    {
-	SENSOR_LOG_INFO("get gpio %d success\n",taos_datap->irq_pin_num);
-    }
 
 
-    ret = gpio_tlmm_config(GPIO_CFG(taos_datap->irq_pin_num, 0, GPIO_CFG_INPUT, GPIO_CFG_PULL_UP, GPIO_CFG_2MA), GPIO_CFG_ENABLE);
+	taos_datap->irq_work_queue = create_singlethread_workqueue("taos_work_queue");
+	if (!taos_datap->irq_work_queue) {
+		ret = -ENOMEM;
+		SENSOR_LOG_INFO( "---------%s: %d: cannot create work taos_work_queue, err = %d",__func__,__LINE__,ret);
+		return ret;
+	}
 
-    taos_datap->client->irq = gpio_to_irq(taos_datap->irq_pin_num);
+	ret = gpio_request(taos_datap->irq_pin_num, "ALS_PS_INT");
+	if (ret) {
+		SENSOR_LOG_INFO("gpio %d is busy and then to free it\n",taos_datap->irq_pin_num);
+
+		gpio_free(taos_datap->irq_pin_num);
+		ret = gpio_request(taos_datap->irq_pin_num, "ALS_PS_INT");
+		if (ret) {
+			SENSOR_LOG_INFO("gpio %d is busy and then to free it\n",taos_datap->irq_pin_num);
+			return ret;
+		}
+	} else {
+		SENSOR_LOG_INFO("get gpio %d success\n",taos_datap->irq_pin_num);
+	}
+
+
+	ret = gpio_tlmm_config(GPIO_CFG(taos_datap->irq_pin_num, 0, GPIO_CFG_INPUT, GPIO_CFG_PULL_UP, GPIO_CFG_2MA), GPIO_CFG_ENABLE);
+
+	taos_datap->client->irq = gpio_to_irq(taos_datap->irq_pin_num);
 
 	ret = request_threaded_irq(taos_datap->client->irq, NULL, &taos_irq_handler, IRQF_TRIGGER_FALLING | IRQF_ONESHOT, "taos_irq", taos_datap);
-    if (ret != 0)
-    {
-	gpio_free(taos_datap->irq_pin_num);
-	return(ret);
-    }
+	if (ret != 0) {
+		gpio_free(taos_datap->irq_pin_num);
+		return(ret);
+	}
 
-    taos_irq_ops(false, true);
-    INIT_DELAYED_WORK(&taos_datap->als_poll_work, taos_als_poll_work_func);
-    INIT_DELAYED_WORK(&taos_datap->prox_calibrate_work, taos_prox_calibrate_work_func);
-    INIT_DELAYED_WORK(&taos_datap->prox_offset_cal_work, taos_prox_offset_cal_work_func);
-    INIT_DELAYED_WORK(&taos_datap->prox_flush_work, taos_flush_work_func);
+	taos_irq_ops(false, true);
+	INIT_DELAYED_WORK(&taos_datap->als_poll_work, taos_als_poll_work_func);
+	INIT_DELAYED_WORK(&taos_datap->prox_calibrate_work, taos_prox_calibrate_work_func);
+	INIT_DELAYED_WORK(&taos_datap->prox_offset_cal_work, taos_prox_offset_cal_work_func);
+	INIT_DELAYED_WORK(&taos_datap->prox_flush_work, taos_flush_work_func);
 
-  //  INIT_DELAYED_WORK(&taos_datap->prox_unwakelock_work, taos_prox_unwakelock_work_func);
-    hrtimer_init(&taos_datap->prox_unwakelock_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
-    ( taos_datap->prox_unwakelock_timer).function = taos_prox_unwakelock_work_func ;
-   // hrtimer_start(&taos_datap->prox_unwakelock_timer, ktime_set(0, 0), HRTIMER_MODE_REL);
-    proximity_class = class_create(THIS_MODULE, "proximity");
-    light_class     = class_create(THIS_MODULE, "light");
+	//  INIT_DELAYED_WORK(&taos_datap->prox_unwakelock_work, taos_prox_unwakelock_work_func);
+	hrtimer_init(&taos_datap->prox_unwakelock_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+	( taos_datap->prox_unwakelock_timer).function = taos_prox_unwakelock_work_func ;
+	// hrtimer_start(&taos_datap->prox_unwakelock_timer, ktime_set(0, 0), HRTIMER_MODE_REL);
+	proximity_class = class_create(THIS_MODULE, "proximity");
+	light_class     = class_create(THIS_MODULE, "light");
 
-    taos_datap->proximity_dev = device_create(proximity_class, NULL, tmd2772_proximity_dev_t, &tmd2772_driver ,"proximity");
-    if (IS_ERR(taos_datap->proximity_dev))
-    {
-      ret = PTR_ERR(taos_datap->proximity_dev);
-      SENSOR_LOG_ERROR("device_create proximity failed\n");
-      goto create_proximity_dev_failed;
-    }
+	taos_datap->proximity_dev = device_create(proximity_class, NULL, tmd2772_proximity_dev_t, &tmd2772_driver ,"proximity");
+	if (IS_ERR(taos_datap->proximity_dev)) {
+		ret = PTR_ERR(taos_datap->proximity_dev);
+		SENSOR_LOG_ERROR("device_create proximity failed\n");
+		goto create_proximity_dev_failed;
+	}
 
-    taos_datap->light_dev= device_create(light_class, NULL, tmd2772_light_dev_t, &tmd2772_driver ,"light");
-    if (IS_ERR(taos_datap->light_dev))
-    {
-      ret = PTR_ERR(taos_datap->light_dev);
-      SENSOR_LOG_ERROR("device_create light failed\n");
-      goto create_light_dev_failed;
-    }
+	taos_datap->light_dev= device_create(light_class, NULL, tmd2772_light_dev_t, &tmd2772_driver ,"light");
+	if (IS_ERR(taos_datap->light_dev)) {
+		ret = PTR_ERR(taos_datap->light_dev);
+		SENSOR_LOG_ERROR("device_create light failed\n");
+		goto create_light_dev_failed;
+	}
 
-    //prox input
-    taos_datap->p_idev = input_allocate_device();
-    if (!taos_datap->p_idev)
-    {
-	SENSOR_LOG_ERROR("no memory for input_dev '%s'\n",taos_datap->prox_name);
-	ret = -ENODEV;
-	goto input_p_alloc_failed;
-    }
-    taos_datap->p_idev->name = taos_datap->prox_name;
-    taos_datap->p_idev->id.bustype = BUS_I2C;
-    dev_set_drvdata(&taos_datap->p_idev->dev, taos_datap);
-    ret = input_register_device(taos_datap->p_idev);
-    if (ret)
-    {
-	input_free_device(taos_datap->p_idev);
-	SENSOR_LOG_ERROR("cant register input '%s'\n",taos_datap->prox_name);
-	goto input_p_register_failed;
-    }
+	//prox input
+	taos_datap->p_idev = input_allocate_device();
+	if (!taos_datap->p_idev) {
+		SENSOR_LOG_ERROR("no memory for input_dev '%s'\n",taos_datap->prox_name);
+		ret = -ENODEV;
+		goto input_p_alloc_failed;
+	}
+	taos_datap->p_idev->name = taos_datap->prox_name;
+	taos_datap->p_idev->id.bustype = BUS_I2C;
+	dev_set_drvdata(&taos_datap->p_idev->dev, taos_datap);
+	ret = input_register_device(taos_datap->p_idev);
+	if (ret) {
+		input_free_device(taos_datap->p_idev);
+		SENSOR_LOG_ERROR("cant register input '%s'\n",taos_datap->prox_name);
+		goto input_p_register_failed;
+	}
 
-    set_bit(EV_REL, taos_datap->p_idev->evbit);
-    set_bit(REL_X,  taos_datap->p_idev->relbit);
-    set_bit(REL_Y,  taos_datap->p_idev->relbit);
-    set_bit(REL_Z,  taos_datap->p_idev->relbit);
-    set_bit(REL_MISC,  taos_datap->p_idev->relbit);
+	set_bit(EV_REL, taos_datap->p_idev->evbit);
+	set_bit(REL_X,  taos_datap->p_idev->relbit);
+	set_bit(REL_Y,  taos_datap->p_idev->relbit);
+	set_bit(REL_Z,  taos_datap->p_idev->relbit);
+	set_bit(REL_MISC,  taos_datap->p_idev->relbit);
 
-    //light input
-    taos_datap->a_idev = input_allocate_device();
-	if (!taos_datap->a_idev)
-    {
+	//light input
+	taos_datap->a_idev = input_allocate_device();
+	if (!taos_datap->a_idev) {
 		SENSOR_LOG_ERROR("no memory for input_dev '%s'\n",taos_datap->als_name);
 		ret = -ENODEV;
 		goto input_a_alloc_failed;
@@ -2826,23 +2804,22 @@ static int __devinit tmd2772_probe(struct i2c_client *clientp, const struct i2c_
 	taos_datap->a_idev->name = taos_datap->als_name;
 	taos_datap->a_idev->id.bustype = BUS_I2C;
 
-    /*
-	set_bit(EV_ABS, chip->a_idev->evbit);
-	set_bit(ABS_MISC, chip->a_idev->absbit);
-	input_set_abs_params(chip->a_idev, ABS_MISC, 0, 65535, 0, 0);
-    */
+	/*
+	  set_bit(EV_ABS, chip->a_idev->evbit);
+	  set_bit(ABS_MISC, chip->a_idev->absbit);
+	  input_set_abs_params(chip->a_idev, ABS_MISC, 0, 65535, 0, 0);
+	*/
 
-    set_bit(EV_REL, taos_datap->a_idev->evbit);
-    set_bit(REL_X,  taos_datap->a_idev->relbit);
-    set_bit(REL_Y,  taos_datap->a_idev->relbit);
+	set_bit(EV_REL, taos_datap->a_idev->evbit);
+	set_bit(REL_X,  taos_datap->a_idev->relbit);
+	set_bit(REL_Y,  taos_datap->a_idev->relbit);
 
 
 	//chip->a_idev->open = tmg399x_als_idev_open;
 	//chip->a_idev->close = tmg399x_als_idev_close;
 	dev_set_drvdata(&taos_datap->a_idev->dev, taos_datap);
 	ret = input_register_device(taos_datap->a_idev);
-	if (ret)
-    {
+	if (ret) {
 		input_free_device(taos_datap->a_idev);
 		SENSOR_LOG_ERROR("cant register input '%s'\n",taos_datap->prox_name);
 		goto input_a_register_failed;
@@ -2852,37 +2829,37 @@ static int __devinit tmd2772_probe(struct i2c_client *clientp, const struct i2c_
 	dev_set_drvdata(taos_datap->light_dev, taos_datap);
 
 
-    create_sysfs_interfaces_prox(taos_datap->proximity_dev);
-    create_sysfs_interfaces_light(taos_datap->light_dev);
+	create_sysfs_interfaces_prox(taos_datap->proximity_dev);
+	create_sysfs_interfaces_light(taos_datap->light_dev);
 
-    SENSOR_LOG_INFO("Prob OK\n");
+	SENSOR_LOG_INFO("Prob OK\n");
 
 	return 0;
 
 
 input_a_register_failed:
-    input_free_device(taos_datap->a_idev);
+	input_free_device(taos_datap->a_idev);
 input_a_alloc_failed:
 
 input_p_register_failed:
-    input_free_device(taos_datap->p_idev);
+	input_free_device(taos_datap->p_idev);
 input_p_alloc_failed:
 
 create_light_dev_failed:
-    taos_datap->light_dev = NULL;
-    class_destroy(light_class);
+	taos_datap->light_dev = NULL;
+	class_destroy(light_class);
 
 create_proximity_dev_failed:
-    taos_datap->proximity_dev = NULL;
-    class_destroy(proximity_class);
+	taos_datap->proximity_dev = NULL;
+	class_destroy(proximity_class);
 read_chip_id_failed:
 	tmd2772_power_init(taos_datap, 0);
 power_init_failed:
-    kfree(taos_datap);
+	kfree(taos_datap);
 
-    SENSOR_LOG_INFO("Prob Failed\n");
+	SENSOR_LOG_INFO("Prob Failed\n");
 
-    return (ret);
+	return (ret);
 }
 
 #ifdef CONFIG_PM_SLEEP
