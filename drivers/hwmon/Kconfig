@@ -1433,14 +1433,6 @@ menuconfig ZTEMT_SENSORS
 
 if ZTEMT_SENSORS
 
-	config FEATURE_ZTEMT_SENSORS_LOG_ON
-	tristate "ZTEMT SENSORS LOG ON"
-	depends on ZTEMT_SENSORS
-	default n	
-	help 
-		If you want to enable the sensor log,
-		then choose this config 
-
 ################################################# SENSOR_COMMON START
 	config ZTEMT_SENSORS_COMMON
 	tristate "ZTEMT SENSORS COMMON"
