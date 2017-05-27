@@ -1114,9 +1114,8 @@ static ssize_t poweron_reason_info_show(struct device *dev,
 		struct device_attribute *attr, char *buf)
 {
     if(buf)
-		
-	*buf = (char)poweron_reason_index;
-	return 1;
+	    *buf = (char)poweron_reason_index;
+    return 1;
 }
 
 static ssize_t poweron_reason_info_store(struct device *dev, 

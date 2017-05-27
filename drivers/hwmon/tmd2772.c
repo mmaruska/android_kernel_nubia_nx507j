@@ -3750,7 +3750,7 @@ static int taos_prox_calibrate(void)
             prox_sum += prox_cal_info[i].prox_data;
             if (prox_cal_info[i].prox_data > prox_max)
                 prox_max = prox_cal_info[i].prox_data;
-		if (prox_cal_info[i].prox_data < prox_min)
+	    if (prox_cal_info[i].prox_data < prox_min)
                 prox_min = prox_cal_info[i].prox_data;
             SENSOR_LOG_ERROR("prox get time %d data is %d",i,prox_cal_info[i].prox_data);
             mdelay(30);

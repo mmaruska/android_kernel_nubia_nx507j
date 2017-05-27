@@ -4661,12 +4661,12 @@ limHandleDelBssInReAssocContext(tpAniSirGlobal pMac, tpDphHashNode pStaDs,tpPESe
                   limGetIElenFromBssDescription( &psessionEntry->pLimReAssocReq->bssDescription ),
                     &beaconStruct );
             if(pMac->lim.gLimProtectionControl != WNI_CFG_FORCE_POLICY_PROTECTION_DISABLE)
-                limDecideStaProtectionOnAssoc(pMac, &beaconStruct, psessionEntry);
-                if(beaconStruct.erpPresent) {
-                if (beaconStruct.erpIEInfo.barkerPreambleMode)
-                    psessionEntry->beaconParams.fShortPreamble = 0;
-                else
-                    psessionEntry->beaconParams.fShortPreamble = 1;
+		    limDecideStaProtectionOnAssoc(pMac, &beaconStruct, psessionEntry);
+	    if(beaconStruct.erpPresent) {
+		    if (beaconStruct.erpIEInfo.barkerPreambleMode)
+			    psessionEntry->beaconParams.fShortPreamble = 0;
+		    else
+			    psessionEntry->beaconParams.fShortPreamble = 1;
             }
             //updateBss flag is false, as in this case, PE is first deleting the existing BSS and then adding a new one.
             if (eSIR_SUCCESS != limStaSendAddBss( pMac, assocRsp, &beaconStruct,

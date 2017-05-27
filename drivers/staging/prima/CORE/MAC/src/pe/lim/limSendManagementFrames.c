@@ -5652,26 +5652,25 @@ tSirRetStatus limSendAddBARsp( tpAniSirGlobal pMac,
            halStatus));
     if( eHAL_STATUS_SUCCESS != halStatus )
     {
-    limLog( pMac, LOGE,
-        FL( "halTxFrame FAILED! Status [%d]" ),
-        halStatus );
+	    limLog( pMac, LOGE,
+		    FL( "halTxFrame FAILED! Status [%d]" ),
+		    halStatus );
 
-    // FIXME - HAL error codes are different from PE error
-    // codes!! And, this routine is returning tSirRetStatus
-    statusCode = eSIR_FAILURE;
-    //Pkt will be freed up by the callback
-    return statusCode;
-  }
-  else
-    return eSIR_SUCCESS;
+	    // FIXME - HAL error codes are different from PE error
+	    // codes!! And, this routine is returning tSirRetStatus
+	    statusCode = eSIR_FAILURE;
+	    //Pkt will be freed up by the callback
+	    return statusCode;
+    } else
+	    return eSIR_SUCCESS;
 
-    returnAfterError:
+returnAfterError:
       // Release buffer, if allocated
-      if( NULL != pAddBARspBuffer )
-        palPktFree( pMac->hHdd,
-            HAL_TXRX_FRM_802_11_MGMT,
-            (void *) pAddBARspBuffer,
-            (void *) pPacket );
+    if( NULL != pAddBARspBuffer )
+	    palPktFree( pMac->hHdd,
+			HAL_TXRX_FRM_802_11_MGMT,
+			(void *) pAddBARspBuffer,
+			(void *) pPacket );
 
       return statusCode;
 }
@@ -5859,26 +5858,24 @@ tSirRetStatus limSendDelBAInd( tpAniSirGlobal pMac,
    MTRACE(macTrace(pMac, TRACE_CODE_TX_COMPLETE,
           psessionEntry->peSessionId,
           halStatus));
-  if( eHAL_STATUS_SUCCESS != halStatus )
-  {
-    PELOGE(limLog( pMac, LOGE, FL( "halTxFrame FAILED! Status [%d]" ), halStatus );)
-    statusCode = eSIR_FAILURE;
-    //Pkt will be freed up by the callback
-    return statusCode;
-  }
-  else
-    return eSIR_SUCCESS;
+  if( eHAL_STATUS_SUCCESS != halStatus ) {
+	  PELOGE(limLog( pMac, LOGE, FL( "halTxFrame FAILED! Status [%d]" ), halStatus );)
+		  statusCode = eSIR_FAILURE;
+	  //Pkt will be freed up by the callback
+	  return statusCode;
+  } else
+	  return eSIR_SUCCESS;
 
-    returnAfterError:
+returnAfterError:
 
-      // Release buffer, if allocated
-      if( NULL != pDelBAIndBuffer )
-        palPktFree( pMac->hHdd,
-            HAL_TXRX_FRM_802_11_MGMT,
-            (void *) pDelBAIndBuffer,
-            (void *) pPacket );
+  // Release buffer, if allocated
+  if( NULL != pDelBAIndBuffer )
+	  palPktFree( pMac->hHdd,
+		      HAL_TXRX_FRM_802_11_MGMT,
+		      (void *) pDelBAIndBuffer,
+		      (void *) pPacket );
 
-      return statusCode;
+  return statusCode;
 }
 
 #if defined WLAN_FEATURE_VOWIFI

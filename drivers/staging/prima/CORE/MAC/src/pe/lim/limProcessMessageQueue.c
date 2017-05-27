@@ -200,12 +200,12 @@ __limHandleBeacon(tpAniSirGlobal pMac, tpSirMsgQ pMsg, tpPESession psessionEntry
     else if( (psessionEntry->limSmeState == eLIM_SME_LINK_EST_STATE) ||
                 (psessionEntry->limSmeState == eLIM_SME_NORMAL_STATE))
     {
-        schBeaconProcess(pMac, pRxPacketInfo, psessionEntry);
+	    schBeaconProcess(pMac, pRxPacketInfo, psessionEntry);
     }
-     else
-        limProcessBeaconFrame(pMac, pRxPacketInfo, psessionEntry);
+    else
+	    limProcessBeaconFrame(pMac, pRxPacketInfo, psessionEntry);
 
-        return;
+    return;
 }
 
 
