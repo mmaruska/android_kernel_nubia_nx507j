@@ -428,7 +428,7 @@ static int taos_get_data(void);
 static void taos_irq_ops(bool enable, bool flag_sync)
 {
 	if (enable == taos_datap->irq_enabled) {
-		pr_info("doubule %s irq, retern here\n",enable? "enable" : "disable");
+		pr_info("double %s irq, return here\n",enable? "enable" : "disable");
 		return;
 	} else {
 		taos_datap->irq_enabled  = enable;
@@ -448,7 +448,7 @@ static void taos_irq_ops(bool enable, bool flag_sync)
 }
 
 
-static ssize_t attr_set_prox_led_pluse_cnt(struct device *dev,
+static ssize_t attr_set_prox_led_pulse_cnt(struct device *dev,
 		struct device_attribute *attr,	const char *buf, size_t size) {
 	unsigned long val;
 	int ret;
@@ -472,10 +472,10 @@ static ssize_t attr_set_prox_led_pluse_cnt(struct device *dev,
 	return size;
 }
 
-static ssize_t attr_get_prox_led_pluse_cnt(struct device *dev,
+static ssize_t attr_get_prox_led_pulse_cnt(struct device *dev,
 		struct device_attribute *attr,	char *buf) {
 	if (NULL!=taos_cfgp) {
-		return sprintf(buf, "prox_led_pluse_cnt is %d\n", taos_cfgp->prox_pulse_cnt);
+		return sprintf(buf, "prox_led_pulse_cnt is %d\n", taos_cfgp->prox_pulse_cnt);
 	} else {
 		sprintf(buf, "taos_cfgp is NULL\n");
 	}
@@ -1623,7 +1623,7 @@ static struct device_attribute attrs_prox[] = {
     __ATTR(chip_name,                      0640,   attr_chip_name_show,                        NULL),
     __ATTR(enable,                         0640,   attr_prox_enable_show,                      attr_prox_enable_store),
     __ATTR(prox_init,                      0640,   attr_prox_init_show,                        attr_prox_init_store),
-    __ATTR(prox_led_pluse_cnt,             0644,   attr_get_prox_led_pluse_cnt,                attr_set_prox_led_pluse_cnt),
+    __ATTR(prox_led_pulse_cnt,             0644,   attr_get_prox_led_pulse_cnt,                attr_set_prox_led_pulse_cnt),
     __ATTR(prox_adc_time,                  0644,   attr_get_prox_adc_time,                     attr_set_prox_adc_time),
     __ATTR(prox_led_strength_level,        0644,   attr_get_prox_led_strength_level,           attr_set_prox_led_strength_level),
     __ATTR(prox_debug_delay,               0644,   attr_get_prox_debug_delay,                  attr_set_prox_debug_delay),
@@ -1693,7 +1693,7 @@ error:
 static void taos_wakelock_ops(struct taos_wake_lock *wakelock, bool enable)
 {
 	if (enable == wakelock->locked) {
-		pr_info("doubule %s %s, retern here\n",enable? "lock" : "unlock",wakelock->name);
+		pr_info("double %s %s, do nothing\n",enable? "lock" : "unlock", wakelock->name);
 		return;
 	}
 
@@ -2220,7 +2220,7 @@ static int __devinit tmd2772_probe(struct i2c_client *clientp, const struct i2c_
 	int i = 0;
 	unsigned char buf[TAOS_MAX_DEVICE_REGS];
 	char *device_name;
-	pr_info("Prob Start\n");
+	pr_info("Probe Start\n");
 
 	if (!i2c_check_functionality(clientp->adapter, I2C_FUNC_SMBUS_BYTE_DATA)) {
 		pr_err("i2c smbus byte data functions unsupported\n");
@@ -2440,8 +2440,7 @@ static int __devinit tmd2772_probe(struct i2c_client *clientp, const struct i2c_
 	create_sysfs_interfaces_prox(taos_datap->proximity_dev);
 	create_sysfs_interfaces_light(taos_datap->light_dev);
 
-	pr_info("Prob OK\n");
-
+	pr_info("Probe OK\n");
 	return 0;
 
 
@@ -2465,8 +2464,7 @@ read_chip_id_failed:
 power_init_failed:
 	kfree(taos_datap);
 
-	pr_info("Prob Failed\n");
-
+	pr_info("Probe Failed\n");
 	return (ret);
 }
 
