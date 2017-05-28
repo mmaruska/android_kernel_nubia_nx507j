@@ -449,7 +449,8 @@ static void taos_irq_ops(bool enable, bool flag_sync)
 
 
 static ssize_t attr_set_prox_led_pulse_cnt(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size) {
+		struct device_attribute *attr, const char *buf, size_t size)
+{
 	unsigned long val;
 	int ret;
 	dev_err(dev, "enter\n");
@@ -473,7 +474,8 @@ static ssize_t attr_set_prox_led_pulse_cnt(struct device *dev,
 }
 
 static ssize_t attr_get_prox_led_pulse_cnt(struct device *dev,
-		struct device_attribute *attr,	char *buf) {
+		struct device_attribute *attr, char *buf)
+{
 	if (NULL!=taos_cfgp) {
 		return sprintf(buf, "prox_led_pulse_cnt is %d\n", taos_cfgp->prox_pulse_cnt);
 	} else {
@@ -482,8 +484,10 @@ static ssize_t attr_get_prox_led_pulse_cnt(struct device *dev,
 	return strlen(buf);
 }
 
+// is there a mutex synchronization?
 static ssize_t attr_set_als_adc_time(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size) {
+		struct device_attribute *attr, const char *buf, size_t size)
+{
 	unsigned long val;
 	int ret;
 	dev_err(dev, "enter\n");
@@ -507,7 +511,8 @@ static ssize_t attr_set_als_adc_time(struct device *dev,
 }
 
 static ssize_t attr_get_als_adc_time(struct device *dev,
-		struct device_attribute *attr,	char *buf) {
+		struct device_attribute *attr, char *buf)
+{
 	if (NULL!=taos_cfgp) {
 		return sprintf(buf, "als_adc_time is 2.72 * %d ms\n", 255 - taos_cfgp->prox_int_time);
 	} else {
@@ -517,7 +522,8 @@ static ssize_t attr_get_als_adc_time(struct device *dev,
 }
 
 static ssize_t attr_set_prox_adc_time(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size) {
+		struct device_attribute *attr, const char *buf, size_t size)
+{
 	unsigned long val;
 	int ret;
 	dev_err(dev, "enter\n");
@@ -541,7 +547,8 @@ static ssize_t attr_set_prox_adc_time(struct device *dev,
 }
 
 static ssize_t attr_get_prox_adc_time(struct device *dev,
-		struct device_attribute *attr,	char *buf) {
+		struct device_attribute *attr, char *buf)
+{
 	if (NULL!=taos_cfgp) {
 		return sprintf(buf, "prox_adc_time is 2.72 * %d ms\n", 255 - taos_cfgp->prox_adc_time);
 	} else {
@@ -551,7 +558,8 @@ static ssize_t attr_get_prox_adc_time(struct device *dev,
 }
 
 static ssize_t attr_set_wait_time(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size) {
+		struct device_attribute *attr, const char *buf, size_t size)
+{
 	unsigned long val;
 	int ret;
 	dev_err(dev, "enter\n");
@@ -576,7 +584,8 @@ static ssize_t attr_set_wait_time(struct device *dev,
 }
 
 static ssize_t attr_get_wait_time(struct device *dev,
-		struct device_attribute *attr,	char *buf) {
+		struct device_attribute *attr, char *buf)
+{
 	if (NULL!=taos_cfgp) {
 		return sprintf(buf, "wait_time is 2.72 * %d ms\n", 255 - taos_cfgp->prox_wait_time);
 	} else {
@@ -586,7 +595,8 @@ static ssize_t attr_get_wait_time(struct device *dev,
 }
 
 static ssize_t attr_set_prox_led_strength_level(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size) {
+		struct device_attribute *attr, const char *buf, size_t size)
+{
 	unsigned long val;
 	int ret;
 	dev_err(dev, "enter\n");
@@ -615,7 +625,8 @@ static ssize_t attr_set_prox_led_strength_level(struct device *dev,
 }
 
 static ssize_t attr_get_prox_led_strength_level(struct device *dev,
-		struct device_attribute *attr,	char *buf) {
+		struct device_attribute *attr, char *buf)
+{
 	char *p_led_strength[4] = {"100", "50", "25", "12.5"};
 	if (NULL!=taos_cfgp) {
 		return sprintf(buf, "prox_led_strength is %s mA\n", p_led_strength[(taos_cfgp->prox_gain) >> 6]);
@@ -659,7 +670,8 @@ static ssize_t attr_set_als_gain(struct device *dev,
 }
 
 static ssize_t attr_get_als_gain(struct device *dev,
-		struct device_attribute *attr,	char *buf) {
+		struct device_attribute *attr, char *buf)
+{
 	u8 als_gain[4] = {1, 8, 16, 120};
 	if (NULL!=taos_cfgp) {
 		return sprintf(buf, "als gain is x%d\n", als_gain[taos_cfgp->prox_gain & 0x03]);
@@ -670,7 +682,8 @@ static ssize_t attr_get_als_gain(struct device *dev,
 }
 
 static ssize_t attr_set_prox_debug_delay(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size) {
+		struct device_attribute *attr, const char *buf, size_t size)
+{
 	unsigned long val;
 	dev_err(dev, "enter\n");
 	if (strict_strtoul(buf, 10, &val)) {
@@ -684,7 +697,8 @@ static ssize_t attr_set_prox_debug_delay(struct device *dev,
 }
 
 static ssize_t attr_get_prox_debug_delay(struct device *dev,
-		struct device_attribute *attr,	char *buf) {
+		struct device_attribute *attr, char *buf)
+{
 	if (NULL!=taos_cfgp) {
 		return sprintf(buf, "prox_debug_delay_time is %d\n", prox_debug_delay_time);
 	} else {
@@ -695,7 +709,7 @@ static ssize_t attr_get_prox_debug_delay(struct device *dev,
 
 
 static ssize_t attr_prox_debug_store(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size) {
+		struct device_attribute *attr, const char *buf, size_t size) {
 	unsigned long val;
 	dev_err(dev, "enter\n");
 	if (strict_strtoul(buf, 10, &val)) {
@@ -713,7 +727,7 @@ static ssize_t attr_prox_debug_store(struct device *dev,
 }
 
 static ssize_t attr_prox_debug_show(struct device *dev,
-		struct device_attribute *attr,	char *buf) {
+		struct device_attribute *attr, char *buf) {
 	if (NULL!=taos_cfgp) {
 		return sprintf(buf, "flag_prox_debug is %s\n", flag_prox_debug? "true" : "false");
 	} else {
@@ -723,7 +737,7 @@ static ssize_t attr_prox_debug_show(struct device *dev,
 }
 
 static ssize_t attr_prox_calibrate_start_show(struct device *dev,
-		struct device_attribute *attr,	char *buf) {
+		struct device_attribute *attr, char *buf) {
 	if (NULL!=taos_cfgp) {
 		return sprintf(buf, "flag_prox_calibrate_startis %s\n", flag_prox_debug? "true" : "false");
 	} else {
@@ -734,7 +748,7 @@ static ssize_t attr_prox_calibrate_start_show(struct device *dev,
 
 
 static ssize_t attr_prox_offset_cal_start_show(struct device *dev,
-		struct device_attribute *attr,	char *buf) {
+		struct device_attribute *attr, char *buf) {
 	if (NULL!=taos_cfgp) {
 		return sprintf(buf, "flag_prox_offset_cal_startis %s\n", flag_prox_debug? "true" : "false");
 	} else {
@@ -804,7 +818,7 @@ static ssize_t attr_prox_prox_wakelock_show(struct device *dev,
 
 //als
 static ssize_t attr_set_als_debug(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size) {
+		struct device_attribute *attr, const char *buf, size_t size) {
 	unsigned long val;
 	dev_err(dev, "enter\n");
 	if (strict_strtoul(buf, 10, &val)) {
@@ -822,7 +836,7 @@ static ssize_t attr_set_als_debug(struct device *dev,
 }
 
 static ssize_t attr_get_als_debug(struct device *dev,
-		struct device_attribute *attr,	char *buf) {
+		struct device_attribute *attr, char *buf) {
 	if (NULL!=taos_cfgp) {
 		return sprintf(buf, "flag_prox_debug is %s\n", flag_als_debug? "true" : "false");
 	} else {
@@ -832,7 +846,7 @@ static ssize_t attr_get_als_debug(struct device *dev,
 }
 
 static ssize_t attr_set_irq(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size) {
+		struct device_attribute *attr, const char *buf, size_t size) {
 	unsigned long val;
 	dev_err(dev, "enter\n");
 	if (strict_strtoul(buf, 10, &val)) {
@@ -850,7 +864,7 @@ static ssize_t attr_set_irq(struct device *dev,
 }
 
 static ssize_t attr_get_irq(struct device *dev,
-		struct device_attribute *attr,	char *buf) {
+		struct device_attribute *attr, char *buf) {
 	if (NULL!=taos_datap) {
 		return sprintf(buf, "flag_irq is %s\n", taos_datap->irq_enabled? "true" : "false");
 	} else {
@@ -861,7 +875,7 @@ static ssize_t attr_get_irq(struct device *dev,
 
 
 static ssize_t attr_set_prox_calibrate(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size) {
+		struct device_attribute *attr, const char *buf, size_t size) {
 	int val,ret;
 
 	ret=kstrtouint(buf, 10, &val);
@@ -881,7 +895,7 @@ static ssize_t attr_set_prox_calibrate(struct device *dev,
 }
 
 static ssize_t attr_prox_thres_high_store(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size) {
+		struct device_attribute *attr, const char *buf, size_t size) {
 	unsigned long val;
 	dev_err(dev, "enter\n");
 	if (strict_strtoul(buf, 10, &val)) {
@@ -900,7 +914,7 @@ static ssize_t attr_prox_thres_high_store(struct device *dev,
 
 
 static ssize_t attr_prox_thres_high_show(struct device *dev,
-		struct device_attribute *attr,	char *buf) {
+		struct device_attribute *attr, char *buf) {
 	if (NULL!=taos_cfgp) {
 		return sprintf(buf, "prox_calibrate_hi_param is %d\n",prox_calibrate_hi_param);
 	} else {
@@ -910,7 +924,7 @@ static ssize_t attr_prox_thres_high_show(struct device *dev,
 }
 
 static ssize_t attr_prox_thres_low_store(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size) {
+		struct device_attribute *attr, const char *buf, size_t size) {
 	unsigned long val;
 	dev_err(dev, "enter\n");
 	if (strict_strtoul(buf, 10, &val)) {
@@ -929,7 +943,7 @@ static ssize_t attr_prox_thres_low_store(struct device *dev,
 
 
 static ssize_t attr_prox_thres_low_show(struct device *dev,
-		struct device_attribute *attr,	char *buf) {
+		struct device_attribute *attr, char *buf) {
 	if (NULL!=taos_cfgp) {
 		return sprintf(buf, "prox_calibrate_lo_param is %d\n",prox_calibrate_lo_param);
 	} else {
@@ -939,7 +953,7 @@ static ssize_t attr_prox_thres_low_show(struct device *dev,
 }
 
 static ssize_t attr_prox_thres_show(struct device *dev,
-		struct device_attribute *attr,	char *buf) {
+		struct device_attribute *attr, char *buf) {
 	if (NULL!=taos_cfgp) {
 		return sprintf(buf, "prox_calibrate_lo_param is %d\n prox_calibrate_hi_param is %d\n",taos_cfgp->prox_threshold_lo,taos_cfgp->prox_threshold_hi);
 	} else {
@@ -990,7 +1004,7 @@ static ssize_t attr_prox_thres_store(struct device *dev,
 	return size;
 }
 static ssize_t attr_set_als_scale_factor_param_prox(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size) {
+		struct device_attribute *attr, const char *buf, size_t size) {
 	unsigned long val;
 	dev_err(dev, "enter\n");
 	if (strict_strtoul(buf, 10, &val)) {
@@ -1014,7 +1028,7 @@ static ssize_t attr_set_als_scale_factor_param_prox(struct device *dev,
 
 
 static ssize_t attr_get_als_scale_factor_param_prox(struct device *dev,
-		struct device_attribute *attr,	char *buf) {
+		struct device_attribute *attr, char *buf) {
 	if (NULL!=taos_cfgp) {
 		sprintf(buf, "als_scale_factor_param_prox is %d\n",taos_cfgp->scale_factor_prox);
 	} else {
@@ -1024,7 +1038,7 @@ static ssize_t attr_get_als_scale_factor_param_prox(struct device *dev,
 }
 
 static ssize_t attr_set_als_scale_factor_param_als(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size) {
+		struct device_attribute *attr, const char *buf, size_t size) {
 	unsigned long val;
 	dev_err(dev, "enter\n");
 	if (strict_strtoul(buf, 10, &val)) {
@@ -1049,7 +1063,7 @@ static ssize_t attr_set_als_scale_factor_param_als(struct device *dev,
 
 
 static ssize_t attr_get_als_scale_factor_param_als(struct device *dev,
-		struct device_attribute *attr,	char *buf) {
+		struct device_attribute *attr, char *buf) {
 	if (NULL!=taos_cfgp) {
 		sprintf(buf, "als_scale_factor_param_als is %d\n",taos_cfgp->scale_factor_als);
 	} else {
@@ -1060,7 +1074,7 @@ static ssize_t attr_get_als_scale_factor_param_als(struct device *dev,
 
 
 static ssize_t attr_get_prox_threshold_high(struct device *dev,
-		struct device_attribute *attr,	char *buf) {
+		struct device_attribute *attr, char *buf) {
 	if (NULL!=taos_cfgp) {
 		return sprintf(buf, "%d", taos_cfgp->prox_threshold_hi);
 	} else {
@@ -1070,7 +1084,7 @@ static ssize_t attr_get_prox_threshold_high(struct device *dev,
 }
 
 static ssize_t attr_set_prox_threshold_high(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size) {
+		struct device_attribute *attr, const char *buf, size_t size) {
 	unsigned long val;
 	dev_err(dev, "enter\n");
 	if (strict_strtoul(buf, 10, &val)) {
@@ -1090,7 +1104,7 @@ static ssize_t attr_set_prox_threshold_high(struct device *dev,
 
 
 static ssize_t attr_get_prox_threshold_low(struct device *dev,
-		struct device_attribute *attr,	char *buf) {
+		struct device_attribute *attr, char *buf) {
 	if (NULL!=taos_cfgp) {
 		return sprintf(buf, "%d", taos_cfgp->prox_threshold_lo);
 	} else {
@@ -1100,7 +1114,7 @@ static ssize_t attr_get_prox_threshold_low(struct device *dev,
 }
 
 static ssize_t attr_set_prox_threshold_low(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size) {
+		struct device_attribute *attr, const char *buf, size_t size) {
 	unsigned long val;
 	dev_err(dev, "enter\n");
 	if (strict_strtoul(buf, 10, &val)) {
@@ -1119,7 +1133,7 @@ static ssize_t attr_set_prox_threshold_low(struct device *dev,
 
 
 static ssize_t attr_set_prox_offset(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size) {
+		struct device_attribute *attr, const char *buf, size_t size) {
 	unsigned long val;
 	int ret;
 	dev_err(dev, "enter\n");
@@ -1143,7 +1157,7 @@ static ssize_t attr_set_prox_offset(struct device *dev,
 }
 
 static ssize_t attr_get_prox_offset(struct device *dev,
-		struct device_attribute *attr,	char *buf) {
+		struct device_attribute *attr, char *buf) {
 	if (NULL!=taos_cfgp) {
 		return sprintf(buf, "prox_config_offset_param is %d\n", taos_cfgp->prox_config_offset);
 	} else {
@@ -1153,7 +1167,7 @@ static ssize_t attr_get_prox_offset(struct device *dev,
 }
 
 static ssize_t attr_prox_calibrate_result_show(struct device *dev,
-		struct device_attribute *attr,	char *buf) {
+		struct device_attribute *attr, char *buf) {
 	if (NULL!=taos_datap) {
 		return sprintf(buf, "%d", taos_datap->prox_calibrate_result);
 	} else {
@@ -1162,7 +1176,7 @@ static ssize_t attr_prox_calibrate_result_show(struct device *dev,
 	return strlen(buf);
 }
 static ssize_t attr_prox_offset_cal_result_show(struct device *dev,
-		struct device_attribute *attr,	char *buf) {
+		struct device_attribute *attr, char *buf) {
 	if (NULL!=taos_datap) {
 		return sprintf(buf, "%d", taos_datap->prox_offset_cal_result);
 	} else {
@@ -1172,7 +1186,7 @@ static ssize_t attr_prox_offset_cal_result_show(struct device *dev,
 }
 
 static ssize_t attr_prox_thres_hi_max(struct device *dev,
-		struct device_attribute *attr,	char *buf) {
+		struct device_attribute *attr, char *buf) {
 	if (NULL!=taos_datap) {
 		dev_err(dev,  "prox_thres_hi_max is %d\n",taos_datap->prox_thres_hi_max);
 		return sprintf(buf, "%d", PROX_THRESHOLD_HIGH_MAX);
@@ -1184,7 +1198,7 @@ static ssize_t attr_prox_thres_hi_max(struct device *dev,
 
 
 static ssize_t attr_prox_thres_hi_min(struct device *dev,
-		struct device_attribute *attr,	char *buf) {
+		struct device_attribute *attr, char *buf) {
 	if (NULL!=taos_datap) {
 		dev_err(dev, "prox_thres_hi_min is %d\n",taos_datap->prox_thres_hi_min);
 		return sprintf(buf, "%d", taos_datap->prox_thres_hi_min);
@@ -1195,7 +1209,7 @@ static ssize_t attr_prox_thres_hi_min(struct device *dev,
 }
 
 static ssize_t attr_prox_data_safa_range_max_show(struct device *dev,
-		struct device_attribute *attr,	char *buf) {
+		struct device_attribute *attr, char *buf) {
 	if (NULL!=taos_datap) {
 		dev_err(dev,  "PROX_DATA_SAFE_RANGE_MAX is %d\n",PROX_DATA_SAFE_RANGE_MAX);
 
@@ -1208,7 +1222,7 @@ static ssize_t attr_prox_data_safa_range_max_show(struct device *dev,
 
 
 static ssize_t attr_prox_data_safa_range_min_show(struct device *dev,
-		struct device_attribute *attr,	char *buf) {
+		struct device_attribute *attr, char *buf) {
 	if (NULL!=taos_datap) {
 		dev_err(dev, "PROX_DATA_SAFE_RANGE_MIN is %d\n",PROX_DATA_SAFE_RANGE_MIN);
 
@@ -1219,7 +1233,7 @@ static ssize_t attr_prox_data_safa_range_min_show(struct device *dev,
 	return strlen(buf);
 }
 static ssize_t attr_chip_name_show(struct device *dev,
-		struct device_attribute *attr,	char *buf) {
+		struct device_attribute *attr, char *buf) {
 	if (NULL!=taos_datap) {
 		return sprintf(buf, "%s", taos_datap->chip_name);
 	} else {
@@ -1230,7 +1244,7 @@ static ssize_t attr_chip_name_show(struct device *dev,
 
 
 static ssize_t attr_prox_data_max(struct device *dev,
-		struct device_attribute *attr,	char *buf) {
+		struct device_attribute *attr, char *buf) {
 	if (NULL!=taos_datap) {
 		return sprintf(buf, "%d", taos_datap->prox_data_max);
 	} else {
@@ -1240,7 +1254,7 @@ static ssize_t attr_prox_data_max(struct device *dev,
 }
 
 static ssize_t attr_prox_manual_calibrate_threshold(struct device *dev,
-		struct device_attribute *attr,	char *buf) {
+		struct device_attribute *attr, char *buf) {
 	if (NULL!=taos_datap) {
 		return sprintf(buf, "%d", taos_datap->prox_manual_calibrate_threshold);
 	} else {
@@ -1250,7 +1264,7 @@ static ssize_t attr_prox_manual_calibrate_threshold(struct device *dev,
 }
 
 static ssize_t attr_set_reg_addr(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size) {
+		struct device_attribute *attr, const char *buf, size_t size) {
 	unsigned long val;
 	dev_err(dev, "enter\n");
 	if (strict_strtoul(buf, 10, &val)) {
@@ -1264,7 +1278,7 @@ static ssize_t attr_set_reg_addr(struct device *dev,
 }
 
 static ssize_t attr_get_reg_addr(struct device *dev,
-		struct device_attribute *attr,	char *buf) {
+		struct device_attribute *attr, char *buf) {
 
 	dev_err(dev, "enter\n");
 	dev_err(dev, "reg_addr = 0x%02X\n",reg_addr);
@@ -1275,7 +1289,7 @@ static ssize_t attr_get_reg_addr(struct device *dev,
 
 
 static ssize_t attr_set_reg_data(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size) {
+		struct device_attribute *attr, const char *buf, size_t size) {
 	unsigned long val;
 	int ret;
 	dev_err(dev, "enter\n");
@@ -1297,7 +1311,7 @@ static ssize_t attr_set_reg_data(struct device *dev,
 
 
 static ssize_t attr_get_reg_data(struct device *dev,
-		struct device_attribute *attr,	char *buf) {
+		struct device_attribute *attr, char *buf) {
 	unsigned char i;
 	if (100 == reg_addr) {
 		for (i=0x00; i<=0x0F; i++) {
@@ -1320,7 +1334,7 @@ static ssize_t attr_get_reg_data(struct device *dev,
 }
 
 static ssize_t attr_get_prox_value(struct device *dev,
-		struct device_attribute *attr,	char *buf) {
+		struct device_attribute *attr, char *buf) {
 	if (NULL!=taos_cfgp) {
 		dev_err(dev, "get_prox_value\n");
 		schedule_delayed_work(&taos_datap->prox_flush_work, msecs_to_jiffies(200));
@@ -1332,7 +1346,7 @@ static ssize_t attr_get_prox_value(struct device *dev,
 }
 
 static ssize_t attr_get_als_value(struct device *dev,
-		struct device_attribute *attr,	char *buf) {
+		struct device_attribute *attr, char *buf) {
 	if (NULL!=taos_cfgp) {
 		dev_err(dev, "get_prox_value\n");
 		//taos_als_get_data();
@@ -1557,7 +1571,7 @@ static ssize_t attr_prox_offset_cal_store(struct device *dev,
 }
 
 static ssize_t attr_prox_offset_cal_verify_show(struct device *dev,
-		struct device_attribute *attr,	char *buf) {
+		struct device_attribute *attr, char *buf) {
 	if (NULL != taos_datap) {
 		return sprintf(buf, "%d", taos_datap->prox_offset_cal_verify);
 	} else {
@@ -1567,7 +1581,7 @@ static ssize_t attr_prox_offset_cal_verify_show(struct device *dev,
 }
 
 static ssize_t attr_prox_offset_cal_verify_store(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size) {
+		struct device_attribute *attr, const char *buf, size_t size) {
 	unsigned long val = 0;
 
 	dev_err(dev, "enter\n");
@@ -1582,7 +1596,7 @@ static ssize_t attr_prox_offset_cal_verify_store(struct device *dev,
 }
 
 static ssize_t attr_prox_calibrate_verify_show(struct device *dev,
-		struct device_attribute *attr,	char *buf) {
+		struct device_attribute *attr, char *buf) {
 	if (NULL != taos_datap) {
 		return sprintf(buf, "%d", taos_datap->prox_calibrate_verify);
 	} else {
@@ -1592,7 +1606,7 @@ static ssize_t attr_prox_calibrate_verify_show(struct device *dev,
 }
 
 static ssize_t attr_prox_calibrate_verify_store(struct device *dev,
-		struct device_attribute *attr,	const char *buf, size_t size) {
+		struct device_attribute *attr, const char *buf, size_t size) {
 	unsigned long val = 0;
 
 	dev_err(dev, "enter\n");
