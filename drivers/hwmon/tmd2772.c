@@ -39,16 +39,13 @@
 #include <linux/regulator/consumer.h>
 
 
-#ifdef CONFIG_ZTE_DEVICE_INFO_SHOW
-#include <linux/zte_device_info.h>
-#endif
 
 #include "tmd2772.h"
 
 #define LOG_TAG "SENSOR_ALS_PROX"
 #define DEBUG_ON //DEBUG SWITCH
 
-#define SENSOR_LOG_FILE__ strrchr(__FILE__, '/') ? (strrchr(__FILE__, '/')+1) : __FILE__
+// #define SENSOR_LOG_FILE__ strrchr(__FILE__, '/') ? (strrchr(__FILE__, '/')+1) : __FILE__
 
 // ZTEMT ADD by zhubing 2012-2-20 V8000/X501
 // added the work mode marco
@@ -83,7 +80,6 @@ static void taos_update_sat_als(void);
 static int taos_prox_on(void);
 static int taos_prox_off(void);
 static int taos_prox_calibrate(void);
-static void taos_prox_calibrate_work_func(struct work_struct *work);
 static void taos_prox_offset_cal_work_func(struct work_struct *work);
 static void taos_wakelock_ops(struct taos_wake_lock *wakelock, bool enable);
 static int taos_write_cal_file(char *file_path,unsigned int value);
@@ -93,33 +89,6 @@ static enum hrtimer_restart  taos_prox_unwakelock_work_func(struct hrtimer *time
 
 static dev_t const tmd2772_proximity_dev_t = MKDEV(MISC_MAJOR, 101);
 static dev_t const tmd2772_light_dev_t     = MKDEV(MISC_MAJOR, 102);
-
-
-DECLARE_WAIT_QUEUE_HEAD(waitqueue_read);//iVIZM
-
-struct ReadData { //iVIZM
-    unsigned int data;
-    unsigned int interrupt;
-};
-struct ReadData readdata[2];//iVIZM
-
-// workqueue struct
-//static struct workqueue_struct *taos_wq; //iVIZM
-
-// class structure for this device
-struct class *taos_class;
-
-// board and address info   iVIZM
-struct i2c_board_info taos_board_info[] = {
-    {I2C_BOARD_INFO(TAOS_DEVICE_ID, TAOS_DEVICE_ADDR2),},
-};
-
-unsigned short const taos_addr_list[2] = {TAOS_DEVICE_ADDR2, I2C_CLIENT_END};//iVIZM
-
-// client and device
-struct i2c_client *my_clientp;
-struct i2c_client *bad_clientp[TAOS_MAX_NUM_DEVICES];
-static int device_found = 0;
 
 static struct class         *proximity_class;
 static struct class         *light_class;
@@ -133,16 +102,9 @@ static bool flag_als_debug  = false;
 static bool flag_just_open_light = false;
 static unsigned int als_poll_delay = 1000;
 static unsigned int prox_debug_delay_time = 0;
-u16 status = 0;
 static int als_poll_time_mul  = 1;
 static unsigned char reg_addr = 0;
 static bool wakeup_from_sleep = false;
-
-// ZTEMT ADD by zhubing
-// modify for input filter the same data
-static int last_proximity_data = -1;
-//static int last_als_data       = -1;
-// ZTEMT ADD by zhubing END
 
 
 static const struct i2c_device_id tmd2772_idtable_id[] = {
@@ -188,7 +150,6 @@ struct taos_data {
 	struct mutex lock;
 	struct device *class_dev;
 	struct delayed_work als_poll_work;
-	struct delayed_work prox_calibrate_work;
 	struct delayed_work prox_offset_cal_work;
 	struct delayed_work prox_flush_work;
 	struct hrtimer  prox_unwakelock_timer;
@@ -1236,7 +1197,7 @@ static ssize_t attr_get_prox_value(struct device *dev,
 	if (NULL!=taos_cfgp) {
 		dev_err(dev, "get_prox_value\n");
 		schedule_delayed_work(&taos_datap->prox_flush_work, msecs_to_jiffies(200));
-		return sprintf(buf, "%d\n", last_proximity_data%100000);
+		return sprintf(buf, "%d\n", prox_cur_infop->prox_data % 100000);
 	} else {
 		sprintf(buf, "taos_cfgp is NULL\n");
 	}
@@ -1726,8 +1687,6 @@ static void taos_irq_work_func(struct work_struct * work) //iVIZM
 	taos_datap->irq_work_status = false;
 // pr_info("########  taos_irq_work_func enter   hrtimer_start #########\n");
 	hrtimer_start(&taos_datap->prox_unwakelock_timer, ktime_set(3, 0), HRTIMER_MODE_REL);
-
-//  schedule_delayed_work(&taos_datap->prox_unwakelock_work, msecs_to_jiffies(1000));
 
 	taos_irq_ops(true, true);
 	pr_info("retry_times = %d\n", retry_times);
@@ -2266,7 +2225,6 @@ static int __devinit tmd2772_probe(struct i2c_client *clientp, const struct i2c_
 
 	taos_irq_ops(false, true);
 	INIT_DELAYED_WORK(&taos_datap->als_poll_work, taos_als_poll_work_func);
-	INIT_DELAYED_WORK(&taos_datap->prox_calibrate_work, taos_prox_calibrate_work_func);
 	INIT_DELAYED_WORK(&taos_datap->prox_offset_cal_work, taos_prox_offset_cal_work_func);
 	INIT_DELAYED_WORK(&taos_datap->prox_flush_work, taos_flush_work_func);
 
@@ -2634,11 +2592,6 @@ static void taos_als_poll_work_func(struct work_struct *work)
 	if (true == taos_datap->als_on) {
 		schedule_delayed_work(&taos_datap->als_poll_work, msecs_to_jiffies(als_poll_time_mul * als_poll_delay));
 	}
-}
-
-static void taos_prox_calibrate_work_func(struct work_struct *work)
-{
-	taos_prox_calibrate();
 }
 
 static int taos_prox_offset_cal_prepare(void)
