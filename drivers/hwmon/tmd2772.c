@@ -1875,7 +1875,7 @@ static int taos_interrupts_clear(void)//iVIZM
 {
 	int ret = 0;
 	if ((ret = (i2c_smbus_write_byte(taos_datap->client, (TAOS_TRITON_CMD_REG|TAOS_TRITON_CMD_SPL_FN|0x07)))) < 0) {
-		printk(KERN_ERR "TAOS: i2c_smbus_write_byte(2) failed in taos_work_func()\n");
+		pr_err("TAOS: i2c_smbus_write_byte(2) failed in taos_work_func()\n");
 		return (ret);
 	}
 	return ret;
@@ -1887,14 +1887,14 @@ static int taos_als_get_data(void)//iVIZM
 	u8 reg_val;
 	int lux_val = 0;
 	if ((ret = (i2c_smbus_write_byte(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_CNTRL)))) < 0) {
-		printk(KERN_ERR "TAOS: i2c_smbus_write_byte failed in ioctl als_data\n");
+		pr_err("TAOS: i2c_smbus_write_byte failed in ioctl als_data\n");
 		return (ret);
 	}
 	reg_val = i2c_smbus_read_byte(taos_datap->client);
 	if ((reg_val & (TAOS_TRITON_CNTL_ADC_ENBL | TAOS_TRITON_CNTL_PWRON)) != (TAOS_TRITON_CNTL_ADC_ENBL | TAOS_TRITON_CNTL_PWRON))
 		return -ENODATA;
 	if ((ret = (i2c_smbus_write_byte(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_STATUS)))) < 0) {
-		printk(KERN_ERR "TAOS: i2c_smbus_write_byte failed in ioctl als_data\n");
+		pr_err("TAOS: i2c_smbus_write_byte failed in ioctl als_data\n");
 		return (ret);
 	}
 	reg_val = i2c_smbus_read_byte(taos_datap->client);
@@ -1902,7 +1902,7 @@ static int taos_als_get_data(void)//iVIZM
 		return -ENODATA;
 
 	if ((lux_val = taos_get_lux()) < 0) {
-		printk(KERN_ERR "TAOS: call to taos_get_lux() returned error %d in ioctl als_data\n", lux_val);
+		pr_err("TAOS: call to taos_get_lux() returned error %d in ioctl als_data\n", lux_val);
 	}
 
 	if (lux_val<TAOS_ALS_GAIN_DIVIDE && gain_param!=TAOS_ALS_GAIN_8X) {
@@ -1914,7 +1914,7 @@ static int taos_als_get_data(void)//iVIZM
 	}
 
 	if ((ret = (i2c_smbus_write_byte(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_ALS_TIME)))) < 0) {
-		printk(KERN_ERR "TAOS: i2c_smbus_write_byte failed in ioctl als_data\n");
+		pr_err("TAOS: i2c_smbus_write_byte failed in ioctl als_data\n");
 		return (ret);
 	}
 
@@ -1966,7 +1966,7 @@ static int taos_prox_threshold_set(void)//iVIZM
 		for( mcount=0; mcount<4; mcount++) {
 			// mmc:
 			if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x08) + mcount, pro_buf[mcount]))) < 0) {
-				printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in taos prox threshold set\n");
+				pr_err("TAOS: i2c_smbus_write_byte_data failed in taos prox threshold set\n");
 				return (ret);
 			}
 		}
@@ -1995,7 +1995,7 @@ static int taos_prox_threshold_set(void)//iVIZM
 			if (proxdata > taos_cfgp->prox_threshold_hi)
 			{   //NEAR
 				if (cleardata > ((sat_als * 80) / 100)) {
-					printk(KERN_ERR "TAOS: %u <= %u*0.8 int data\n", proxdata, sat_als);
+					pr_err("TAOS: %u <= %u*0.8 int data\n", proxdata, sat_als);
 					msleep(100);
 					return -ENODATA;
 				}
@@ -2017,7 +2017,7 @@ static int taos_prox_threshold_set(void)//iVIZM
 				} else {
 					//NEAR
 					if (cleardata > ((sat_als*80)/100)) {
-						printk(KERN_ERR "TAOS: %u <= %u*0.8 int data\n",proxdata,sat_als);
+						pr_err("TAOS: %u <= %u*0.8 int data\n", proxdata, sat_als);
 						msleep(100);
 						return -ENODATA;
 					}
@@ -2036,7 +2036,7 @@ static int taos_prox_threshold_set(void)//iVIZM
 
 	for( mcount=0; mcount<4; mcount++) {
 		if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x08) + mcount, pro_buf[mcount]))) < 0) {
-			printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in taos prox threshold set\n");
+			pr_err("TAOS: i2c_smbus_write_byte_data failed in taos prox threshold set\n");
 			return (ret);
 		}
 	}
@@ -2277,32 +2277,32 @@ static int __devinit tmd2772_probe(struct i2c_client *clientp, const struct i2c_
 
 	for (i = 0; i < TAOS_MAX_DEVICE_REGS; i++) {
 		if ((ret = (i2c_smbus_write_byte(clientp, (TAOS_TRITON_CMD_REG | (TAOS_TRITON_CNTRL + i))))) < 0) {
-			printk(KERN_ERR "TAOS: i2c_smbus_write_byte() to control reg failed in taos_probe()\n");
+			pr_err("TAOS: i2c_smbus_write_byte() to control reg failed in taos_probe()\n");
 			return(ret);
 		}
 		buf[i] = i2c_smbus_read_byte(clientp);
 	}
 
 	if ((ret = taos_device_name(buf, &device_name)) == 0) {
-		printk(KERN_ERR "TAOS: chip id that was read found mismatched by taos_device_name(), in taos_probe()\n");
+		pr_err("TAOS: chip id that was read found mismatched by taos_device_name(), in taos_probe()\n");
 		return -ENODEV;
 	}
 	if (strcmp(device_name, TAOS_DEVICE_ID)) {
-		printk(KERN_ERR "TAOS: chip id that was read does not match expected id in taos_probe()\n");
+		pr_err("TAOS: chip id that was read does not match expected id in taos_probe()\n");
 		return -ENODEV;
 	} else {
 		pr_err("TAOS: chip id of %s that was read matches expected id in taos_probe()\n", device_name);
 		pr_err( "TAOS: chip id of %s that was read matches expected id in taos_probe()\n", device_name);
 	}
 	if ((ret = (i2c_smbus_write_byte(clientp, (TAOS_TRITON_CMD_REG | TAOS_TRITON_CNTRL)))) < 0) {
-		printk(KERN_ERR "TAOS: i2c_smbus_write_byte() to control reg failed in taos_probe()\n");
+		pr_err("TAOS: i2c_smbus_write_byte() to control reg failed in taos_probe()\n");
 		return(ret);
 	}
 	strlcpy(clientp->name, TAOS_DEVICE_ID, I2C_NAME_SIZE);
 	strlcpy(taos_datap->taos_name, TAOS_DEVICE_ID, TAOS_ID_NAME_SIZE);
 	taos_datap->valid = 0;
 	if (!(taos_cfgp = kmalloc(sizeof(struct taos_cfg), GFP_KERNEL))) {
-		printk(KERN_ERR "TAOS: kmalloc for struct taos_cfg failed in taos_probe()\n");
+		pr_err("TAOS: kmalloc for struct taos_cfg failed in taos_probe()\n");
 		return -ENOMEM;
 	}
 	taos_cfgp->calibrate_target = calibrate_target_param;
@@ -2331,7 +2331,7 @@ static int __devinit tmd2772_probe(struct i2c_client *clientp, const struct i2c_
 	/*dmobile ::power down for init ,Rambo liu*/
 	pr_err("TAOS:Rambo::light sensor will pwr down \n");
 	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|TAOS_TRITON_CNTRL), 0x00))) < 0) {
-		printk(KERN_ERR "TAOS:Rambo, i2c_smbus_write_byte_data failed in power down\n");
+		pr_err("TAOS:Rambo, i2c_smbus_write_byte_data failed in power down\n");
 		return (ret);
 	}
 
@@ -2496,7 +2496,7 @@ static int taos_resume(struct i2c_client *client)
 		ret = disable_irq_wake(taos_datap->client->irq);
 	}
 	if(ret < 0)
-		printk(KERN_ERR "TAOS: disable_irq_wake failed\n");
+		pr_err("TAOS: disable_irq_wake failed\n");
 	pr_info("eixt\n");
 	return ret ;
 }
@@ -2511,7 +2511,7 @@ static int taos_suspend(struct i2c_client *client, pm_message_t mesg)
 		ret = enable_irq_wake(taos_datap->client->irq);
 	}
 	if(ret < 0) {
-		printk(KERN_ERR "TAOS: enable_irq_wake failed\n");
+		pr_err("TAOS: enable_irq_wake failed\n");
 	}
 
 	wakeup_from_sleep = true;
@@ -2544,7 +2544,7 @@ static int taos_get_lux(void)
 	int tmp = 0, i = 0,tmp_gain=1;
 	for (i = 0; i < 4; i++) {
 		if ((ret = (i2c_smbus_write_byte(taos_datap->client, (TAOS_TRITON_CMD_REG | (TAOS_TRITON_ALS_CHAN0LO + i))))) < 0) {
-			printk(KERN_ERR "TAOS: i2c_smbus_write_byte() to chan0/1/lo/hi reg failed in taos_get_lux()\n");
+			pr_err("TAOS: i2c_smbus_write_byte() to chan0/1/lo/hi reg failed in taos_get_lux()\n");
 			return (ret);
 		}
 		chdata[i] = i2c_smbus_read_byte(taos_datap->client);
@@ -2581,11 +2581,11 @@ static int taos_get_lux(void)
 	if(raw_clear == 0)
 		return(0);
 	if(dev_gain == 0 || dev_gain > 127) {
-		printk(KERN_ERR "TAOS: dev_gain = 0 or > 127 in taos_get_lux()\n");
+		pr_err("TAOS: dev_gain = 0 or > 127 in taos_get_lux()\n");
 		return -1;
 	}
 	if(lux_timep->denominator == 0) {
-		printk(KERN_ERR "TAOS: lux_timep->denominator = 0 in taos_get_lux()\n");
+		pr_err("TAOS: lux_timep->denominator = 0 in taos_get_lux()\n");
 		return -1;
 	}
 	ratio = (raw_ir<<15)/raw_clear;
@@ -2661,7 +2661,7 @@ static int taos_prox_poll(struct taos_prox_info *prxp)
 	prxp->prox_clear <<= 8;
 	prxp->prox_clear |= chdata[0];
 	if (prxp->prox_clear > ((sat_als * 80) / 100)) {
-		printk(KERN_ERR "TAOS: %u <= %u*0.8 poll data\n", prxp->prox_clear, sat_als);
+		pr_err("TAOS: %u <= %u*0.8 poll data\n", prxp->prox_clear, sat_als);
 		return -ENODATA;
 	}
 	prxp->prox_data = chdata[5];
@@ -2678,8 +2678,8 @@ static void taos_prox_poll_timer_func(unsigned long param)
 
     if (!device_released) {
 	if ((ret = taos_prox_poll(prox_cur_infop)) < 0) {
-	printk(KERN_ERR "TAOS: call to prox_poll failed in taos_prox_poll_timer_func()\n");
-	    return;
+		pr_err("TAOS: call to prox_poll failed in taos_prox_poll_timer_func()\n");
+		return;
 	}
 	taos_prox_poll_timer_start();
     }
@@ -2702,7 +2702,7 @@ static void taos_update_sat_als(void)
 	int ret = 0;
 
 	if ((ret = (i2c_smbus_write_byte(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_ALS_TIME)))) < 0) {
-		printk(KERN_ERR "TAOS: i2c_smbus_write_byte failed in ioctl als_calibrate\n");
+		pr_err("TAOS: i2c_smbus_write_byte failed in ioctl als_calibrate\n");
 		return;
 	}
 
@@ -2876,7 +2876,7 @@ static int taos_prox_offset_cal_process(void)
 	for (i = 0; i < (PROX_OFFSET_CAL_BUFFER_SIZE); i++) {
 		if ((ret = taos_prox_poll(&prox_cal_info[i])) < 0) {
 			j++;
-			printk(KERN_ERR "TAOS: call to prox_poll failed in ioctl prox_calibrate\n");
+			pr_err("TAOS: call to prox_poll failed in ioctl prox_calibrate\n");
 		}
 		prox_sum += prox_cal_info[i].prox_data;
 
@@ -2990,12 +2990,12 @@ static int taos_sensors_als_poll_on(void)
 
 	if (taos_datap->prox_on) {
 		if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_ALS_TIME), TAOS_ALS_ADC_TIME_WHEN_PROX_ON))) < 0) {
-			printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
+			pr_err("TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
 			return (ret);
 		}
 	} else {
 		if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_ALS_TIME), taos_cfgp->prox_int_time))) < 0) {
-			printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl als_on\n");
+			pr_err("TAOS: i2c_smbus_write_byte_data failed in ioctl als_on\n");
 			return (ret);
 		}
 	}
@@ -3007,7 +3007,7 @@ static int taos_sensors_als_poll_on(void)
 	reg_val = reg_val & 0xFC;
 	reg_val = reg_val | (taos_cfgp->gain & 0x03);//*16
 	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_GAIN), reg_val))) < 0) {
-		printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl als_on\n");
+		pr_err("TAOS: i2c_smbus_write_byte_data failed in ioctl als_on\n");
 		return (ret);
 	}
 
@@ -3016,7 +3016,7 @@ static int taos_sensors_als_poll_on(void)
 
 	reg_cntrl |= (TAOS_TRITON_CNTL_ADC_ENBL | TAOS_TRITON_CNTL_PWRON);
 	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_CNTRL), reg_cntrl))) < 0) {
-		printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl als_on\n");
+		pr_err("TAOS: i2c_smbus_write_byte_data failed in ioctl als_on\n");
 		return (ret);
 	}
 
@@ -3050,14 +3050,14 @@ static int taos_sensors_als_poll_off(void)
 		pr_info("TAOS_TRITON_CNTL_PROX_DET_ENBL = 0\n");
 		reg_val = 0x00;
 		if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_CNTRL), reg_val))) < 0) {
-			printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl als_off\n");
+			pr_err("TAOS: i2c_smbus_write_byte_data failed in ioctl als_off\n");
 			return (ret);
 		}
 
 	}
 
 	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|TAOS_TRITON_ALS_TIME), 0XFF))) < 0) {
-		printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
+		pr_err("TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
 		return (ret);
 	}
 
@@ -3083,12 +3083,12 @@ static int taos_prox_on(void)
 
 	if (true==taos_datap->als_on) {
 		if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|TAOS_TRITON_ALS_TIME), TAOS_ALS_ADC_TIME_WHEN_PROX_ON))) < 0) {
-			printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
+			pr_err("TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
 			return (ret);
 		}
 	} else {
 		if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|TAOS_TRITON_ALS_TIME), 0XFF))) < 0) {
-			printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
+			pr_err("TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
 			return (ret);
 		}
 	}
@@ -3100,7 +3100,7 @@ static int taos_prox_on(void)
 		return (ret);
 	}
 	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|TAOS_TRITON_WAIT_TIME), taos_cfgp->prox_wait_time))) < 0) {
-		printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
+		pr_err("TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
 		return (ret);
 	}
 
@@ -3127,7 +3127,7 @@ static int taos_prox_on(void)
 	reg_cntrl = TAOS_TRITON_CNTL_PROX_DET_ENBL | TAOS_TRITON_CNTL_PWRON | TAOS_TRITON_CNTL_PROX_INT_ENBL |
 		TAOS_TRITON_CNTL_ADC_ENBL | TAOS_TRITON_CNTL_WAIT_TMR_ENBL  ;
 	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_CNTRL), reg_cntrl))) < 0) {
-		printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
+		pr_err("TAOS: i2c_smbus_write_byte_data failed in ioctl prox_on\n");
 		return (ret);
 	}
 	pro_ft = true;
@@ -3139,7 +3139,7 @@ static int taos_prox_on(void)
 		for (i = 0, j = 0; i < 5; i++) {
 			if ((ret = taos_prox_poll(&prox_cal_info[i])) < 0) {
 				j++;
-				printk(KERN_ERR "TAOS: call to prox_poll failed in ioctl prox_calibrate\n");
+				pr_err("TAOS: call to prox_poll failed in ioctl prox_calibrate\n");
 			}
 			prox_sum += prox_cal_info[i].prox_data;
 			if (prox_cal_info[i].prox_data > prox_max)
@@ -3184,7 +3184,7 @@ static int taos_prox_off(void)
 	}
 
 	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_CNTRL), 0x00))) < 0) {
-		printk(KERN_ERR "TAOS: i2c_smbus_write_byte_data failed in ioctl als_off\n");
+		pr_err("TAOS: i2c_smbus_write_byte_data failed in ioctl als_off\n");
 		return (ret);
 	}
 
@@ -3264,7 +3264,7 @@ static int taos_prox_calibrate(void)
 	for (i = 0; i < (taos_datap->prox_calibrate_times); i++) {
 		if ((ret = taos_prox_poll(&prox_cal_info[i])) < 0) {
 			j++;
-			printk(KERN_ERR "TAOS: call to prox_poll failed in ioctl prox_calibrate\n");
+			pr_err("TAOS: call to prox_poll failed in ioctl prox_calibrate\n");
 		}
 		prox_sum += prox_cal_info[i].prox_data;
 		if (prox_cal_info[i].prox_data > prox_max)
