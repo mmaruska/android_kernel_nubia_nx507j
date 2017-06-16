@@ -518,13 +518,13 @@ static ssize_t attr_prox_debug_show(struct device *dev,
 
 static ssize_t attr_prox_calibrate_start_show(struct device *dev,
 		struct device_attribute *attr, char *buf) {
-	return sprintf(buf, "flag_prox_calibrate_startis %s\n", flag_prox_debug? "true" : "false");
+	return sprintf(buf, "flag_prox_calibrate_start is %s\n", flag_prox_debug ? "true" : "false");
 }
 
 
 static ssize_t attr_prox_offset_cal_start_show(struct device *dev,
 		struct device_attribute *attr, char *buf) {
-	return sprintf(buf, "flag_prox_offset_cal_startis %s\n", flag_prox_debug? "true" : "false");
+	return sprintf(buf, "flag_prox_offset_cal_start is %s\n", flag_prox_debug? "true" : "false");
 }
 
 
@@ -1258,7 +1258,7 @@ static struct device_attribute attrs_prox[] = {
     __ATTR(prox_thres_param_low,           0640,   attr_prox_thres_low_show,                   attr_prox_thres_low_store),
     __ATTR(prox_thres,                     0640,   attr_prox_thres_show,                       attr_prox_thres_store),
     __ATTR(prox_debug,                     0640,   attr_prox_debug_show,                       attr_prox_debug_store),
-    __ATTR(prox_calibrate_start,           0640,   attr_prox_calibrate_start_show,             attr_prox_debug_store),
+    __ATTR(prox_calibrate_start,           0640,   attr_prox_calibrate_start_show,             attr_prox_debug_store), /* ?? */
     __ATTR(prox_thres_max,                 0644,   attr_prox_thres_hi_max,                     NULL),
     __ATTR(prox_thres_min,                 0644,   attr_prox_thres_hi_min,                     NULL),
     __ATTR(prox_data_max,                  0640,   attr_prox_data_max,                         NULL),
@@ -1269,7 +1269,7 @@ static struct device_attribute attrs_prox[] = {
     __ATTR(reg_data,                       0644,   attr_get_reg_data,                          attr_set_reg_data),
     __ATTR(irq_status,                     0644,   attr_get_irq,                               attr_set_irq),
     __ATTR(wait_time,                      0644,   attr_get_wait_time,                         attr_set_wait_time),
-    __ATTR(prox_offset_cal_start,          0640,   attr_prox_offset_cal_start_show,     attr_prox_debug_store),
+    __ATTR(prox_offset_cal_start,          0640,   attr_prox_offset_cal_start_show,     attr_prox_debug_store), /* ?? */
     __ATTR(prox_offset_cal,                0640,   attr_get_prox_offset,           attr_prox_offset_cal_store),
     __ATTR(prox_offset_cal_result,         0640,   attr_prox_offset_cal_result_show,            NULL),
     __ATTR(prox_data_safe_range_max,       0644,   attr_prox_data_safa_range_max_show,  NULL),
