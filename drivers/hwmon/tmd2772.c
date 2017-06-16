@@ -320,13 +320,10 @@ static ssize_t attr_set_prox_led_pulse_cnt(struct device *dev,
 
 	prox_pulse_cnt_param = val;
 
-	if (NULL!=taos_cfgp) {
-		taos_cfgp->prox_pulse_cnt = prox_pulse_cnt_param;
-		if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|TAOS_TRITON_PRX_COUNT), taos_cfgp->prox_pulse_cnt))) < 0) {
-			dev_err(dev, "failed to write the prox_pulse_cnt reg\n");
-		}
-	} else {
-		dev_err(dev, "taos_cfgp is NULL\n");
+	// nonsense: if (NULL!=taos_cfgp) {	/* how could this be? */
+	taos_cfgp->prox_pulse_cnt = prox_pulse_cnt_param;
+	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|TAOS_TRITON_PRX_COUNT), taos_cfgp->prox_pulse_cnt))) < 0) {
+		dev_err(dev, "failed to write the prox_pulse_cnt reg\n");
 	}
 
 	dev_err(dev, "exit\n");
@@ -336,12 +333,8 @@ static ssize_t attr_set_prox_led_pulse_cnt(struct device *dev,
 static ssize_t attr_get_prox_led_pulse_cnt(struct device *dev,
 		struct device_attribute *attr, char *buf)
 {
-	if (NULL!=taos_cfgp) {
-		return sprintf(buf, "prox_led_pulse_cnt is %d\n", taos_cfgp->prox_pulse_cnt);
-	} else {
-		sprintf(buf, "taos_cfgp is NULL\n");
-	}
-	return strlen(buf);
+
+	return sprintf(buf, "prox_led_pluse_cnt is %d\n", taos_cfgp->prox_pulse_cnt);
 }
 
 // is there a mutex synchronization?
@@ -357,13 +350,9 @@ static ssize_t attr_set_als_adc_time(struct device *dev,
 
 	prox_int_time_param = 255 - val;
 
-	if (NULL!=taos_cfgp) {
-		taos_cfgp->prox_int_time = prox_int_time_param;
-		if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|TAOS_TRITON_ALS_TIME), taos_cfgp->prox_int_time))) < 0) {
-			dev_err(dev, "failed to write the als_adc_time reg\n");
-		}
-	} else {
-		dev_err(dev, "taos_cfgp is NULL\n");
+	taos_cfgp->prox_int_time = prox_int_time_param;
+	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|TAOS_TRITON_ALS_TIME), taos_cfgp->prox_int_time))) < 0) {
+		dev_err(dev, "failed to write the als_adc_time reg\n");
 	}
 
 	dev_err(dev, "exit\n");
@@ -373,12 +362,7 @@ static ssize_t attr_set_als_adc_time(struct device *dev,
 static ssize_t attr_get_als_adc_time(struct device *dev,
 		struct device_attribute *attr, char *buf)
 {
-	if (NULL!=taos_cfgp) {
-		return sprintf(buf, "als_adc_time is 2.72 * %d ms\n", 255 - taos_cfgp->prox_int_time);
-	} else {
-		sprintf(buf, "taos_cfgp is NULL\n");
-	}
-	return strlen(buf);
+	return sprintf(buf, "als_adc_time is 2.72 * %d ms\n", 255 - taos_cfgp->prox_int_time);
 }
 
 static ssize_t attr_set_prox_adc_time(struct device *dev,
@@ -393,13 +377,9 @@ static ssize_t attr_set_prox_adc_time(struct device *dev,
 
 	prox_adc_time_param = 255 - val;
 
-	if (NULL!=taos_cfgp) {
-		taos_cfgp->prox_adc_time = prox_adc_time_param;
-		if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|TAOS_TRITON_PRX_TIME), taos_cfgp->prox_adc_time))) < 0) {
-			dev_err(dev, "failed to write the prox_adc_time reg\n");
-		}
-	} else {
-		dev_err(dev, "taos_cfgp is NULL\n");
+	taos_cfgp->prox_adc_time = prox_adc_time_param;
+	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|TAOS_TRITON_PRX_TIME), taos_cfgp->prox_adc_time))) < 0) {
+		dev_err(dev, "failed to write the prox_adc_time reg\n");
 	}
 
 	dev_err(dev, "exit\n");
@@ -409,12 +389,7 @@ static ssize_t attr_set_prox_adc_time(struct device *dev,
 static ssize_t attr_get_prox_adc_time(struct device *dev,
 		struct device_attribute *attr, char *buf)
 {
-	if (NULL!=taos_cfgp) {
-		return sprintf(buf, "prox_adc_time is 2.72 * %d ms\n", 255 - taos_cfgp->prox_adc_time);
-	} else {
-		sprintf(buf, "taos_cfgp is NULL\n");
-	}
-	return strlen(buf);
+	return sprintf(buf, "prox_adc_time is 2.72 * %d ms\n", 255 - taos_cfgp->prox_adc_time);
 }
 
 static ssize_t attr_set_wait_time(struct device *dev,
@@ -429,14 +404,9 @@ static ssize_t attr_set_wait_time(struct device *dev,
 
 	prox_wait_time_param = 255 - val;
 
-	if (NULL!=taos_cfgp) {
-		taos_cfgp->prox_wait_time = prox_wait_time_param;
-		if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|TAOS_TRITON_WAIT_TIME), taos_cfgp->prox_wait_time))) < 0) {
-			dev_err(dev, "failed to write the wait_time reg\n");
-		}
-
-	} else {
-		dev_err(dev, "taos_cfgp is NULL\n");
+	taos_cfgp->prox_wait_time = prox_wait_time_param;
+	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|TAOS_TRITON_WAIT_TIME), taos_cfgp->prox_wait_time))) < 0) {
+		dev_err(dev, "failed to write the wait_time reg\n");
 	}
 
 	dev_err(dev, "exit\n");
@@ -446,12 +416,7 @@ static ssize_t attr_set_wait_time(struct device *dev,
 static ssize_t attr_get_wait_time(struct device *dev,
 		struct device_attribute *attr, char *buf)
 {
-	if (NULL!=taos_cfgp) {
-		return sprintf(buf, "wait_time is 2.72 * %d ms\n", 255 - taos_cfgp->prox_wait_time);
-	} else {
-		sprintf(buf, "taos_cfgp is NULL\n");
-	}
-	return strlen(buf);
+	return sprintf(buf, "wait_time is 2.72 * %d ms\n", 255 - taos_cfgp->prox_wait_time);
 }
 
 static ssize_t attr_set_prox_led_strength_level(struct device *dev,
@@ -470,14 +435,10 @@ static ssize_t attr_set_prox_led_strength_level(struct device *dev,
 		val = 4 - val;
 		prox_gain_param = (prox_gain_param & 0x3F) | (val<<6);
 
-		if (NULL!=taos_cfgp) {
-			taos_cfgp->prox_gain = prox_gain_param;
-			if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|TAOS_TRITON_GAIN), taos_cfgp->prox_gain))) < 0) { /* mmc: 0f ?? is that TAOS_TRITON_GAIN? */
-				dev_err(dev, "failed to write the prox_led_strength reg\n");
+		taos_cfgp->prox_gain = prox_gain_param;
+		if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|TAOS_TRITON_GAIN), taos_cfgp->prox_gain))) < 0) { /* mmc: 0f ?? is that TAOS_TRITON_GAIN? */
+			dev_err(dev, "failed to write the prox_led_strength reg\n");
 			}
-		} else {
-			dev_err(dev, "taos_cfgp is NULL\n");
-		}
 	}
 
 	dev_err(dev, "exit\n");
@@ -488,12 +449,7 @@ static ssize_t attr_get_prox_led_strength_level(struct device *dev,
 		struct device_attribute *attr, char *buf)
 {
 	char *p_led_strength[4] = {"100", "50", "25", "12.5"};
-	if (NULL!=taos_cfgp) {
-		return sprintf(buf, "prox_led_strength is %s mA\n", p_led_strength[(taos_cfgp->prox_gain) >> 6]);
-	} else {
-		sprintf(buf, "taos_cfgp is NULL\n");
-	}
-	return strlen(buf);
+	return sprintf(buf, "prox_led_strength is %s mA\n", p_led_strength[(taos_cfgp->prox_gain) >> 6]);
 }
 
 
@@ -514,14 +470,10 @@ static ssize_t attr_set_als_gain(struct device *dev,
 		prox_gain_param = (prox_gain_param & 0xFC) | val;
 		gain_param      = prox_gain_param & 0x03;
 
-		if (NULL!=taos_cfgp) {
-			taos_cfgp->gain      = gain_param;
-			taos_cfgp->prox_gain = prox_gain_param;
-			if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|TAOS_TRITON_GAIN), taos_cfgp->prox_gain))) < 0) {
-				dev_err(dev, "failed to write the prox_led_strength reg\n");
-			}
-		} else {
-			dev_err(dev, "taos_cfgp is NULL\n");
+		taos_cfgp->gain      = gain_param;
+		taos_cfgp->prox_gain = prox_gain_param;
+		if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|TAOS_TRITON_GAIN), taos_cfgp->prox_gain))) < 0) {
+			dev_err(dev, "failed to write the prox_led_strength reg\n");
 		}
 	}
 
@@ -534,12 +486,7 @@ static ssize_t attr_get_als_gain(struct device *dev,
 		struct device_attribute *attr, char *buf)
 {
 	u8 als_gain[4] = {1, 8, 16, 120};
-	if (NULL!=taos_cfgp) {
-		return sprintf(buf, "als gain is x%d\n", als_gain[taos_cfgp->prox_gain & 0x03]);
-	} else {
-		sprintf(buf, "taos_cfgp is NULL\n");
-	}
-	return strlen(buf);
+	return sprintf(buf, "als gain is x%d\n", als_gain[taos_cfgp->prox_gain & 0x03]);
 }
 
 static ssize_t attr_set_prox_debug_delay(struct device *dev,
@@ -560,12 +507,7 @@ static ssize_t attr_set_prox_debug_delay(struct device *dev,
 static ssize_t attr_get_prox_debug_delay(struct device *dev,
 		struct device_attribute *attr, char *buf)
 {
-	if (NULL!=taos_cfgp) {
-		return sprintf(buf, "prox_debug_delay_time is %d\n", prox_debug_delay_time);
-	} else {
-		sprintf(buf, "taos_cfgp is NULL\n");
-	}
-	return strlen(buf);
+	return sprintf(buf, "prox_debug_delay_time is %d\n", prox_debug_delay_time);
 }
 
 
@@ -589,33 +531,18 @@ static ssize_t attr_prox_debug_store(struct device *dev,
 
 static ssize_t attr_prox_debug_show(struct device *dev,
 		struct device_attribute *attr, char *buf) {
-	if (NULL!=taos_cfgp) {
-		return sprintf(buf, "flag_prox_debug is %s\n", flag_prox_debug? "true" : "false");
-	} else {
-		sprintf(buf, "taos_cfgp is NULL\n");
-	}
-	return strlen(buf);
+	return sprintf(buf, "flag_prox_debug is %s\n", flag_prox_debug? "true" : "false");
 }
 
 static ssize_t attr_prox_calibrate_start_show(struct device *dev,
 		struct device_attribute *attr, char *buf) {
-	if (NULL!=taos_cfgp) {
-		return sprintf(buf, "flag_prox_calibrate_startis %s\n", flag_prox_debug? "true" : "false");
-	} else {
-		sprintf(buf, "taos_cfgp is NULL\n");
-	}
-	return strlen(buf);
+	return sprintf(buf, "flag_prox_calibrate_startis %s\n", flag_prox_debug? "true" : "false");
 }
 
 
 static ssize_t attr_prox_offset_cal_start_show(struct device *dev,
 		struct device_attribute *attr, char *buf) {
-	if (NULL!=taos_cfgp) {
-		return sprintf(buf, "flag_prox_offset_cal_startis %s\n", flag_prox_debug? "true" : "false");
-	} else {
-		sprintf(buf, "taos_cfgp is NULL\n");
-	}
-	return strlen(buf);
+	return sprintf(buf, "flag_prox_offset_cal_startis %s\n", flag_prox_debug? "true" : "false");
 }
 
 
@@ -698,12 +625,7 @@ static ssize_t attr_set_als_debug(struct device *dev,
 
 static ssize_t attr_get_als_debug(struct device *dev,
 		struct device_attribute *attr, char *buf) {
-	if (NULL!=taos_cfgp) {
-		return sprintf(buf, "flag_prox_debug is %s\n", flag_als_debug? "true" : "false");
-	} else {
-		sprintf(buf, "taos_cfgp is NULL\n");
-	}
-	return strlen(buf);
+	return sprintf(buf, "flag_prox_debug is %s\n", flag_als_debug? "true" : "false");
 }
 
 static ssize_t attr_set_irq(struct device *dev,
@@ -726,12 +648,7 @@ static ssize_t attr_set_irq(struct device *dev,
 
 static ssize_t attr_get_irq(struct device *dev,
 		struct device_attribute *attr, char *buf) {
-	if (NULL!=taos_datap) {
-		return sprintf(buf, "flag_irq is %s\n", taos_datap->irq_enabled? "true" : "false");
-	} else {
-		sprintf(buf, "taos_cfgp is NULL\n");
-	}
-	return strlen(buf);
+	return sprintf(buf, "flag_irq is %s\n", taos_datap->irq_enabled? "true" : "false");
 }
 
 
@@ -776,12 +693,7 @@ static ssize_t attr_prox_thres_high_store(struct device *dev,
 
 static ssize_t attr_prox_thres_high_show(struct device *dev,
 		struct device_attribute *attr, char *buf) {
-	if (NULL!=taos_cfgp) {
-		return sprintf(buf, "prox_calibrate_hi_param is %d\n",prox_calibrate_hi_param);
-	} else {
-		sprintf(buf, "taos_cfgp is NULL\n");
-	}
-	return strlen(buf);
+	return sprintf(buf, "prox_calibrate_hi_param is %d\n",prox_calibrate_hi_param);
 }
 
 static ssize_t attr_prox_thres_low_store(struct device *dev,
@@ -805,24 +717,15 @@ static ssize_t attr_prox_thres_low_store(struct device *dev,
 
 static ssize_t attr_prox_thres_low_show(struct device *dev,
 		struct device_attribute *attr, char *buf) {
-	if (NULL!=taos_cfgp) {
-		return sprintf(buf, "prox_calibrate_lo_param is %d\n", prox_calibrate_lo_param);
-	} else {
-		sprintf(buf, "taos_cfgp is NULL\n");
-	}
-	return strlen(buf);
+	return sprintf(buf, "prox_calibrate_lo_param is %d\n",prox_calibrate_lo_param);
 }
 
 static ssize_t attr_prox_thres_show(struct device *dev,
 		struct device_attribute *attr, char *buf) {
-	if (NULL!=taos_cfgp) {
-		// misleading: not prox_calibrate_lo_param, but prox_threshold_lo !
-		return sprintf(buf, "prox_calibrate_lo_param is %d\n prox_calibrate_hi_param is %d\n", taos_cfgp->prox_threshold_lo, taos_cfgp->prox_threshold_hi);
-	} else {
-		sprintf(buf, "taos_cfgp is NULL\n");
-	}
-	return strlen(buf);
+	// misleading: not prox_calibrate_lo_param, but prox_threshold_lo !
+	return sprintf(buf, "prox_calibrate_lo_param is %d\n prox_calibrate_hi_param is %d\n",taos_cfgp->prox_threshold_lo,taos_cfgp->prox_threshold_hi);
 }
+
 static ssize_t attr_prox_thres_store(struct device *dev,
 				struct device_attribute *attr,
 				const char *buf, size_t size) {
@@ -875,11 +778,7 @@ static ssize_t attr_set_als_scale_factor_param_prox(struct device *dev,
 
 	if (val>0) {
 		scale_factor_param_prox = val;
-		if (NULL!=taos_cfgp) {
-			taos_cfgp->scale_factor_prox = scale_factor_param_prox;
-		} else {
-			dev_err(dev, "taos_cfgp is NULL\n");
-		}
+		taos_cfgp->scale_factor_prox = scale_factor_param_prox;
 	} else {
 		dev_err(dev, "you input error, please input a number that bigger than 0\n");
 	}
@@ -891,12 +790,7 @@ static ssize_t attr_set_als_scale_factor_param_prox(struct device *dev,
 
 static ssize_t attr_get_als_scale_factor_param_prox(struct device *dev,
 		struct device_attribute *attr, char *buf) {
-	if (NULL!=taos_cfgp) {
-		sprintf(buf, "als_scale_factor_param_prox is %d\n",taos_cfgp->scale_factor_prox);
-	} else {
-		sprintf(buf, "taos_cfgp is NULL\n");
-	}
-	return strlen(buf);
+	return sprintf(buf, "als_scale_factor_param_prox is %d\n",taos_cfgp->scale_factor_prox);
 }
 
 static ssize_t attr_set_als_scale_factor_param_als(struct device *dev,
@@ -909,11 +803,7 @@ static ssize_t attr_set_als_scale_factor_param_als(struct device *dev,
 
 	if (val>0) {
 		scale_factor_param_als = val;
-		if (NULL!=taos_cfgp) {
-			taos_cfgp->scale_factor_als = scale_factor_param_als;
-		} else {
-			dev_err(dev, "taos_cfgp is NULL\n");
-		}
+		taos_cfgp->scale_factor_als = scale_factor_param_als;
 	} else {
 		dev_err(dev, "you input error, please input a number that bigger than 0\n");
 	}
@@ -926,23 +816,13 @@ static ssize_t attr_set_als_scale_factor_param_als(struct device *dev,
 
 static ssize_t attr_get_als_scale_factor_param_als(struct device *dev,
 		struct device_attribute *attr, char *buf) {
-	if (NULL!=taos_cfgp) {
-		sprintf(buf, "als_scale_factor_param_als is %d\n",taos_cfgp->scale_factor_als);
-	} else {
-		sprintf(buf, "taos_cfgp is NULL\n");
-	}
-	return strlen(buf);
+	return sprintf(buf, "als_scale_factor_param_als is %d\n",taos_cfgp->scale_factor_als);
 }
 
 
 static ssize_t attr_get_prox_threshold_high(struct device *dev,
 		struct device_attribute *attr, char *buf) {
-	if (NULL!=taos_cfgp) {
-		return sprintf(buf, "%d", taos_cfgp->prox_threshold_hi);
-	} else {
-		sprintf(buf, "taos_cfgp is NULL\n");
-	}
-	return strlen(buf);
+	return sprintf(buf, "%d", taos_cfgp->prox_threshold_hi);
 }
 
 static ssize_t attr_set_prox_threshold_high(struct device *dev,
@@ -953,11 +833,7 @@ static ssize_t attr_set_prox_threshold_high(struct device *dev,
 		return -EINVAL;
 	}
 
-	if (NULL!=taos_cfgp) {
-		taos_cfgp->prox_threshold_hi = val;
-	} else {
-		dev_err(dev, "taos_cfgp is NULL\n");
-	}
+	taos_cfgp->prox_threshold_hi = val;
 
 	dev_err(dev, "exit\n");
 	return size;
@@ -967,12 +843,7 @@ static ssize_t attr_set_prox_threshold_high(struct device *dev,
 
 static ssize_t attr_get_prox_threshold_low(struct device *dev,
 		struct device_attribute *attr, char *buf) {
-	if (NULL!=taos_cfgp) {
-		return sprintf(buf, "%d", taos_cfgp->prox_threshold_lo);
-	} else {
-		sprintf(buf, "taos_cfgp is NULL\n");
-	}
-	return strlen(buf);
+	return sprintf(buf, "%d", taos_cfgp->prox_threshold_lo);
 }
 
 static ssize_t attr_set_prox_threshold_low(struct device *dev,
@@ -983,11 +854,7 @@ static ssize_t attr_set_prox_threshold_low(struct device *dev,
 		return -EINVAL;
 	}
 
-	if (NULL!=taos_cfgp) {
-		taos_cfgp->prox_threshold_lo = val;
-	} else {
-		dev_err(dev, "taos_cfgp is NULL\n");
-	}
+	taos_cfgp->prox_threshold_lo = val;
 
 	dev_err(dev, "exit\n");
 	return size;
@@ -1005,13 +872,9 @@ static ssize_t attr_set_prox_offset(struct device *dev,
 
 	prox_config_offset_param = val;
 
-	if (NULL!=taos_cfgp) {
-		taos_cfgp->prox_config_offset = prox_config_offset_param;
-		if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|TAOS_TRITON_PRX_OFFSET), taos_cfgp->prox_config_offset))) < 0) {
-			dev_err(dev, "failed to write the prox_config_offset  reg\n");
-		}
-	} else {
-		dev_err(dev, "taos_cfgp is NULL\n");
+	taos_cfgp->prox_config_offset = prox_config_offset_param;
+	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|TAOS_TRITON_PRX_OFFSET), taos_cfgp->prox_config_offset))) < 0) {
+		dev_err(dev, "failed to write the prox_config_offset  reg\n");
 	}
 
 	dev_err(dev, "exit\n");
@@ -1020,109 +883,59 @@ static ssize_t attr_set_prox_offset(struct device *dev,
 
 static ssize_t attr_get_prox_offset(struct device *dev,
 		struct device_attribute *attr, char *buf) {
-	if (NULL!=taos_cfgp) {
-		return sprintf(buf, "prox_config_offset_param is %d\n", taos_cfgp->prox_config_offset);
-	} else {
-		sprintf(buf, "taos_cfgp is NULL\n");
-	}
-	return strlen(buf);
+	return sprintf(buf, "prox_config_offset_param is %d\n", taos_cfgp->prox_config_offset);
 }
 
 static ssize_t attr_prox_calibrate_result_show(struct device *dev,
 		struct device_attribute *attr, char *buf) {
-	if (NULL!=taos_datap) {
-		return sprintf(buf, "%d", taos_datap->prox_calibrate_result);
-	} else {
-		sprintf(buf, "taos_cfgp is NULL\n");
-	}
-	return strlen(buf);
+	return sprintf(buf, "%d", taos_datap->prox_calibrate_result);
 }
 static ssize_t attr_prox_offset_cal_result_show(struct device *dev,
 		struct device_attribute *attr, char *buf) {
-	if (NULL!=taos_datap) {
-		return sprintf(buf, "%d", taos_datap->prox_offset_cal_result);
-	} else {
-		sprintf(buf, "taos_cfgp is NULL\n");
-	}
-	return strlen(buf);
+	return sprintf(buf, "%d", taos_datap->prox_offset_cal_result);
 }
 
 static ssize_t attr_prox_thres_hi_max(struct device *dev,
 		struct device_attribute *attr, char *buf) {
-	if (NULL!=taos_datap) {
-		dev_err(dev,  "prox_thres_hi_max is %d\n",taos_datap->prox_thres_hi_max);
-		return sprintf(buf, "%d", PROX_THRESHOLD_HIGH_MAX);
-	} else {
-		sprintf(buf, "taos_cfgp is NULL\n");
-	}
-	return strlen(buf);
+	dev_info(dev,  "prox_thres_hi_max is %d\n",taos_datap->prox_thres_hi_max);
+	return sprintf(buf, "%d", PROX_THRESHOLD_HIGH_MAX);
 }
 
 
 static ssize_t attr_prox_thres_hi_min(struct device *dev,
 		struct device_attribute *attr, char *buf) {
-	if (NULL!=taos_datap) {
-		dev_err(dev, "prox_thres_hi_min is %d\n",taos_datap->prox_thres_hi_min);
-		return sprintf(buf, "%d", taos_datap->prox_thres_hi_min);
-	} else {
-		sprintf(buf, "taos_cfgp is NULL\n");
-	}
-	return strlen(buf);
+	dev_info(dev, "prox_thres_hi_min is %d\n",taos_datap->prox_thres_hi_min);
+	return sprintf(buf, "%d", taos_datap->prox_thres_hi_min);
 }
 
 static ssize_t attr_prox_data_safa_range_max_show(struct device *dev,
 		struct device_attribute *attr, char *buf) {
-	if (NULL!=taos_datap) {
-		dev_err(dev,  "PROX_DATA_SAFE_RANGE_MAX is %d\n",PROX_DATA_SAFE_RANGE_MAX);
-
-		return sprintf(buf, "%d", PROX_DATA_SAFE_RANGE_MAX);
-	} else {
-		sprintf(buf, "taos_cfgp is NULL\n");
-	}
-	return strlen(buf);
+	dev_info(dev,  "PROX_DATA_SAFE_RANGE_MAX is %d\n",PROX_DATA_SAFE_RANGE_MAX);
+	return sprintf(buf, "%d", PROX_DATA_SAFE_RANGE_MAX);
 }
 
 
 static ssize_t attr_prox_data_safa_range_min_show(struct device *dev,
 		struct device_attribute *attr, char *buf) {
-	if (NULL!=taos_datap) {
-		dev_err(dev, "PROX_DATA_SAFE_RANGE_MIN is %d\n",PROX_DATA_SAFE_RANGE_MIN);
+	dev_info(dev, "PROX_DATA_SAFE_RANGE_MIN is %d\n",PROX_DATA_SAFE_RANGE_MIN);
 
-		return sprintf(buf, "%d", PROX_DATA_SAFE_RANGE_MIN);
-	} else {
-		sprintf(buf, "taos_cfgp is NULL\n");
-	}
-	return strlen(buf);
+	return sprintf(buf, "%d", PROX_DATA_SAFE_RANGE_MIN);
 }
+
 static ssize_t attr_chip_name_show(struct device *dev,
 		struct device_attribute *attr, char *buf) {
-	if (NULL!=taos_datap) {
-		return sprintf(buf, "%s", taos_datap->chip_name);
-	} else {
-		sprintf(buf, "taos_cfgp is NULL\n");
-	}
-	return strlen(buf);
+	return sprintf(buf, "%s", taos_datap->chip_name);
 }
 
 
 static ssize_t attr_prox_data_max(struct device *dev,
 		struct device_attribute *attr, char *buf) {
-	if (NULL!=taos_datap) {
-		return sprintf(buf, "%d", taos_datap->prox_data_max);
-	} else {
-		sprintf(buf, "taos_cfgp is NULL\n");
-	}
-	return strlen(buf);
+	return sprintf(buf, "%d", taos_datap->prox_data_max);
 }
 
 static ssize_t attr_prox_manual_calibrate_threshold(struct device *dev,
 		struct device_attribute *attr, char *buf) {
-	if (NULL!=taos_datap) {
-		return sprintf(buf, "%d", taos_datap->prox_manual_calibrate_threshold);
-	} else {
-		sprintf(buf, "taos_cfgp is NULL\n");
-	}
-	return strlen(buf);
+	return sprintf(buf, "%d", taos_datap->prox_manual_calibrate_threshold);
 }
 
 static ssize_t attr_set_reg_addr(struct device *dev,
@@ -1197,26 +1010,16 @@ static ssize_t attr_get_reg_data(struct device *dev,
 
 static ssize_t attr_get_prox_value(struct device *dev,
 		struct device_attribute *attr, char *buf) {
-	if (NULL!=taos_cfgp) {
-		dev_err(dev, "get_prox_value\n");
-		schedule_delayed_work(&taos_datap->prox_flush_work, msecs_to_jiffies(200));
-		return sprintf(buf, "%d\n", prox_cur_infop->prox_data % 100000);
-	} else {
-		sprintf(buf, "taos_cfgp is NULL\n");
-	}
-	return strlen(buf);
+	dev_err(dev, "get_prox_value\n");
+	schedule_delayed_work(&taos_datap->prox_flush_work, msecs_to_jiffies(200));
+	return sprintf(buf, "%d\n", prox_cur_infop->prox_data % 100000);
 }
 
 static ssize_t attr_get_als_value(struct device *dev,
 		struct device_attribute *attr, char *buf) {
-	if (NULL!=taos_cfgp) {
-		dev_err(dev, "get_prox_value\n");
-		//taos_als_get_data();
-		schedule_delayed_work(&taos_datap->als_poll_work, msecs_to_jiffies(200));
-		return strlen(buf);
-	} else {
-		sprintf(buf, "taos_cfgp is NULL\n");
-	}
+	dev_err(dev, "get_prox_value\n");
+	//taos_als_get_data();
+	schedule_delayed_work(&taos_datap->als_poll_work, msecs_to_jiffies(200));
 	return strlen(buf);
 }
 
@@ -1401,12 +1204,7 @@ static ssize_t attr_prox_offset_cal_store(struct device *dev,
 
 static ssize_t attr_prox_offset_cal_verify_show(struct device *dev,
 		struct device_attribute *attr, char *buf) {
-	if (NULL != taos_datap) {
-		return sprintf(buf, "%d", taos_datap->prox_offset_cal_verify);
-	} else {
-		sprintf(buf, "taos_datap is NULL\n");
-	}
-	return strlen(buf);
+	return sprintf(buf, "%d", taos_datap->prox_offset_cal_verify);
 }
 
 static ssize_t attr_prox_offset_cal_verify_store(struct device *dev,
@@ -1426,12 +1224,7 @@ static ssize_t attr_prox_offset_cal_verify_store(struct device *dev,
 
 static ssize_t attr_prox_calibrate_verify_show(struct device *dev,
 		struct device_attribute *attr, char *buf) {
-	if (NULL != taos_datap) {
-		return sprintf(buf, "%d", taos_datap->prox_calibrate_verify);
-	} else {
-		sprintf(buf, "taos_datap is NULL\n");
-	}
-	return strlen(buf);
+	return sprintf(buf, "%d", taos_datap->prox_calibrate_verify);
 }
 
 static ssize_t attr_prox_calibrate_verify_store(struct device *dev,
