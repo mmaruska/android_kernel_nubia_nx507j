@@ -245,7 +245,6 @@ struct taos_prox_info prox_cal_info[20];
 struct taos_prox_info prox_cur_info;
 struct taos_prox_info * const prox_cur_infop = &prox_cur_info;
 static struct timer_list prox_poll_timer;
-// static int device_released = 0;
 static u16 sat_als = 0;
 static u16 sat_prox = 0;
 
@@ -2277,14 +2276,12 @@ static void taos_prox_poll_timer_func(unsigned long param)
 {
 	int ret = 0;
 
-    if (!device_released) {
 	if ((ret = taos_prox_poll(prox_cur_infop)) < 0) {
 		pr_err("TAOS: call to prox_poll failed in taos_prox_poll_timer_func()\n");
 		return;
 	}
 	taos_prox_poll_timer_start();
-    }
-    return;
+	return;
 }
 
 // start prox poll timer
