@@ -240,7 +240,7 @@ static u8  prox_config_offset_param  = 0x0;
 // prox info
 struct taos_prox_info prox_cal_info[20];
 struct taos_prox_info prox_cur_info;
-struct taos_prox_info *prox_cur_infop = &prox_cur_info;
+struct taos_prox_info * const prox_cur_infop = &prox_cur_info;
 static struct timer_list prox_poll_timer;
 static int device_released = 0;
 static u16 sat_als = 0;
