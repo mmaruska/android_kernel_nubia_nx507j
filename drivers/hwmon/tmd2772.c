@@ -207,28 +207,31 @@ struct taos_data {
 
 // device configuration by clli2
 struct taos_cfg *taos_cfgp;
-static u32 calibrate_target_param = 300000;
-static u16 als_time_param = 41;
+
+// fixme:
+static const u32 calibrate_target_param = 300000;
+static const u16 als_time_param = 41;
+static const u16 gain_trim_param = 512;          //NULL
+static const u8 filter_history_param = 3;        //NULL
+static const u8 filter_count_param = 1;          //NULL
+
 static u16 scale_factor_param_prox = 6;
 static u16 scale_factor_param_als = 6;
-static u16 gain_trim_param = 512;          //NULL
-static u8 filter_history_param = 3;        //NULL
-static u8 filter_count_param = 1;          //NULL
 /* gain_param  00--1X, 01--8X, 10--16X, 11--120X
  */
 static u8 gain_param = 0;                  //same as prox-gain_param 1:0 8X
 static u16 prox_calibrate_hi_param = 500;
 static u16 prox_calibrate_lo_param = 330;
-static u16 prox_threshold_hi_param = PROX_DEFAULT_THRESHOLD_HIGH;
-static u16 prox_threshold_lo_param = PROX_DEFAULT_THRESHOLD_LOW;
-static u16 als_threshold_hi_param  = 3000;
-static u16 als_threshold_lo_param  = 10;
+static const u16 prox_threshold_hi_param = PROX_DEFAULT_THRESHOLD_HIGH;
+static const u16 prox_threshold_lo_param = PROX_DEFAULT_THRESHOLD_LOW;
+static const u16 als_threshold_hi_param  = 3000;
+static const u16 als_threshold_lo_param  = 10;
 static u8  prox_int_time_param     = 0xF0;//0xCD; // time of the ALS ADC TIME, TIME = (255 - prox_int_time_param) * 2.72ms
 static u8  prox_adc_time_param     = 0xFF; // time of the PRO ADC TIME, TIME = (255 - prox_int_time_param) * 2.72ms
 static u8  prox_wait_time_param    = 0xFF; // time of the    Wait TIME, TIME = (255 - prox_int_time_param) * 2.72ms
 /*7~4->pls,3~0->als*/
-static u8  prox_intr_filter_param  = 0x33; // Int filter, Bit7--Bit4:PROX  Bit3--Bit0:ALS
-static u8  prox_config_param       = 0x00; // wait long time disable
+static const  u8 prox_intr_filter_param  = 0x33; // Int filter, Bit7--Bit4:PROX  Bit3--Bit0:ALS
+static const u8  prox_config_param       = 0x00; // wait long time disable
 /*pulse/62.5Khz  less  32 recommand*/
 static u8  prox_pulse_cnt_param    = PROX_LED_PULSE_CNT; //PROX LED pluse count to send for each measure 0x00--0xff:0--255
 /* 7:6 11->100ma        00->12.5ma
@@ -242,7 +245,7 @@ struct taos_prox_info prox_cal_info[20];
 struct taos_prox_info prox_cur_info;
 struct taos_prox_info * const prox_cur_infop = &prox_cur_info;
 static struct timer_list prox_poll_timer;
-static int device_released = 0;
+// static int device_released = 0;
 static u16 sat_als = 0;
 static u16 sat_prox = 0;
 
