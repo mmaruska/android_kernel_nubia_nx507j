@@ -556,8 +556,7 @@ static ssize_t attr_prox_phone_is_sleep_store(struct device *dev, struct device_
 static ssize_t attr_prox_phone_is_sleep_show(struct device *dev,
 	struct device_attribute *attr, char *buf) {
 	struct taos_data *chip = dev_get_drvdata(dev);
-	dev_info(dev, "prox calibrate is %s\n",chip->phone_is_sleep? "true" : "false");
-	return snprintf(buf, PAGE_SIZE, "prox calibrate is %s\n\n", chip->phone_is_sleep? "true" : "false");
+	return snprintf(buf, PAGE_SIZE, "prox: phone sleep is %s\n\n", chip->phone_is_sleep? "true" : "false");
 }
 
 static ssize_t attr_prox_prox_wakelock_store(struct device *dev, struct device_attribute *attr,
