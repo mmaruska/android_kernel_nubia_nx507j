@@ -337,26 +337,33 @@ static ssize_t attr_get_prox_led_pulse_cnt(struct device *dev,
 	return sprintf(buf, "prox_led_pluse_cnt is %d\n", taos_cfgp->prox_pulse_cnt);
 }
 
-// is there a mutex synchronization?
-static ssize_t attr_set_als_adc_time(struct device *dev,
-		struct device_attribute *attr, const char *buf, size_t size)
+// fixme: max_value!
+static inline int set_register(struct device *dev, const char *buf, size_t size, u8* out, int register_name)
 {
-	unsigned long val;
-	int ret;
+	unsigned long val;	/* not int? */
+	int value;
+
 	dev_err(dev, "enter %s\n", __func__);
 	if (strict_strtoul(buf, 10, &val)) {
 		return -EINVAL;
 	}
+	value = 255 - val;
+	*out = value;
 
-	prox_int_time_param = 255 - val;
-
-	taos_cfgp->prox_int_time = prox_int_time_param;
-	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|TAOS_TRITON_ALS_TIME), taos_cfgp->prox_int_time))) < 0) {
-		dev_err(dev, "failed to write the als_adc_time reg\n");
+	if (i2c_smbus_write_byte_data(taos_datap->client, register_name,
+				      value) < 0) {
+		dev_err(dev, "failed to write the wait_time reg\n");
 	}
 
 	dev_err(dev, "exit\n");
 	return size;
+}
+
+// is there a mutex synchronization?
+static ssize_t attr_set_als_adc_time(struct device *dev,
+		struct device_attribute *attr, const char *buf, size_t size)
+{
+	return set_register(dev, buf, size, &taos_cfgp->prox_int_time, (TAOS_TRITON_CMD_REG|TAOS_TRITON_ALS_TIME));
 }
 
 static ssize_t attr_get_als_adc_time(struct device *dev,
@@ -368,22 +375,7 @@ static ssize_t attr_get_als_adc_time(struct device *dev,
 static ssize_t attr_set_prox_adc_time(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t size)
 {
-	unsigned long val;
-	int ret;
-	dev_err(dev, "enter\n");
-	if (strict_strtoul(buf, 10, &val)) {
-		return -EINVAL;
-	}
-
-	prox_adc_time_param = 255 - val;
-
-	taos_cfgp->prox_adc_time = prox_adc_time_param;
-	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|TAOS_TRITON_PRX_TIME), taos_cfgp->prox_adc_time))) < 0) {
-		dev_err(dev, "failed to write the prox_adc_time reg\n");
-	}
-
-	dev_err(dev, "exit\n");
-	return size;
+	return set_register(dev, buf, size, &taos_cfgp->prox_adc_time, (TAOS_TRITON_CMD_REG|TAOS_TRITON_PRX_TIME));
 }
 
 static ssize_t attr_get_prox_adc_time(struct device *dev,
@@ -395,22 +387,7 @@ static ssize_t attr_get_prox_adc_time(struct device *dev,
 static ssize_t attr_set_wait_time(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t size)
 {
-	unsigned long val;
-	int ret;
-	dev_err(dev, "enter\n");
-	if (strict_strtoul(buf, 10, &val)) {
-		return -EINVAL;
-	}
-
-	prox_wait_time_param = 255 - val;
-
-	taos_cfgp->prox_wait_time = prox_wait_time_param;
-	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|TAOS_TRITON_WAIT_TIME), taos_cfgp->prox_wait_time))) < 0) {
-		dev_err(dev, "failed to write the wait_time reg\n");
-	}
-
-	dev_err(dev, "exit\n");
-	return size;
+	return set_register(dev, buf, size, /* taos_datap,*/ &taos_cfgp->prox_wait_time, (TAOS_TRITON_CMD_REG|TAOS_TRITON_WAIT_TIME));
 }
 
 static ssize_t attr_get_wait_time(struct device *dev,
