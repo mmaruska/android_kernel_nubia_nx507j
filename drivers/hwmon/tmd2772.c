@@ -488,22 +488,27 @@ static ssize_t attr_get_prox_debug_delay(struct device *dev,
 }
 
 
-static ssize_t attr_prox_debug_store(struct device *dev,
-		struct device_attribute *attr, const char *buf, size_t size) {
+inline static int set_boolean(struct device *dev,
+			      const char *buf, size_t size, bool *variable)
+{
 	unsigned long val;
 	dev_err(dev, "enter %s\n", __func__);
 	if (strict_strtoul(buf, 10, &val)) {
 		return -EINVAL;
 	}
-
 	if (val) {
-		flag_prox_debug = true;
+		*variable = true;
 	} else {
-		flag_prox_debug = false;
+		*variable = false;
 	}
 
 	dev_err(dev, "exit\n");
 	return size;
+}
+
+static ssize_t attr_prox_debug_store(struct device *dev,
+		struct device_attribute *attr, const char *buf, size_t size) {
+	return set_boolean(dev, buf, size, &flag_prox_debug);
 }
 
 static ssize_t attr_prox_debug_show(struct device *dev,
@@ -584,20 +589,7 @@ static ssize_t attr_prox_prox_wakelock_show(struct device *dev,
 //als
 static ssize_t attr_set_als_debug(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t size) {
-	unsigned long val;
-	dev_err(dev, "enter\n");
-	if (strict_strtoul(buf, 10, &val)) {
-		return -EINVAL;
-	}
-
-	if (val) {
-		flag_als_debug = true;
-	} else {
-		flag_als_debug = false;
-	}
-
-	dev_err(dev, "exit\n");
-	return size;
+	return set_boolean(dev, buf, size, &flag_als_debug);
 }
 
 static ssize_t attr_get_als_debug(struct device *dev,
