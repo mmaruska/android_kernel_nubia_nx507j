@@ -1220,37 +1220,6 @@ static ssize_t attr_get_als_value(struct device *dev,
 	return strlen(buf);
 }
 
-/*
-static struct device_attribute attributes[] = {
-#ifdef CONFIG_FEATURE_ZTEMT_SENSORS_LOG_ON
-	__ATTR(taos_prox_led_pluse_cnt,             0644,   attr_get_prox_led_pluse_cnt,                attr_set_prox_led_pluse_cnt),
-	__ATTR(taos_als_adc_time,                   0644,   attr_get_als_adc_time,                      attr_set_als_adc_time),
-	__ATTR(taos_prox_adc_time,                  0644,   attr_get_prox_adc_time,                     attr_set_prox_adc_time),
-	__ATTR(taos_wait_time,                      0644,   attr_get_wait_time,                         attr_set_wait_time),
-	__ATTR(taos_prox_led_strength_level,        0644,   attr_get_prox_led_strength_level,           attr_set_prox_led_strength_level),
-	__ATTR(taos_als_gain,                       0644,   attr_get_als_gain,                          attr_set_als_gain),
-	__ATTR(taos_prox_debug,                     0644,   attr_get_prox_debug,                        attr_set_prox_debug),
-	__ATTR(taos_als_debug,                      0644,   attr_get_als_debug,                         attr_set_als_debug),
-	__ATTR(taos_prox_debug_delay,               0644,   attr_get_prox_debug_delay,                  attr_set_prox_debug_delay),
-	__ATTR(taos_irq,                            0644,   attr_get_irq,                               attr_set_irq),
-	__ATTR(taos_prox_calibrate,                 0644,   NULL,                                       attr_set_prox_calibrate),
-	__ATTR(taos_prox_calibrate_hi_param,        0644,   attr_get_prox_calibrate_hi_param,           attr_set_prox_calibrate_hi_param),
-	__ATTR(taos_prox_calibrate_lo_param,        0644,   attr_get_prox_calibrate_lo_param,           attr_set_prox_calibrate_lo_param),
-	__ATTR(taos_als_scale_factor_param_als,     0644,   attr_get_als_scale_factor_param_als,        attr_set_als_scale_factor_param_als),
-	__ATTR(taos_als_scale_factor_param_prox,    0644,   attr_get_als_scale_factor_param_prox,       attr_set_als_scale_factor_param_prox),
-	__ATTR(taos_prox_threshold_high,            0644,   attr_get_prox_threshold_high,               NULL),
-	__ATTR(taos_prox_threshold_low,             0644,   attr_get_prox_threshold_low,                NULL),
-	__ATTR(taos_prox_offset,                    0644,   attr_get_prox_offset,                       attr_set_prox_offset),
-#endif
-    __ATTR(taos_reg_addr,                       0644,   attr_get_reg_addr,                          attr_set_reg_addr),
-    __ATTR(taos_reg_data,                       0644,   attr_get_reg_data,                          attr_set_reg_data),
-	__ATTR(th_hi,                               0644,   attr_get_threshold_hi,                      attr_set_threshold_hi),
-	__ATTR(th_low,                              0644,   attr_get_threshold_lo,                      attr_set_threshold_lo),
-	__ATTR(prox_value,                          0644,   attr_get_prox_value,                        NULL),
-};
-*/
-
-
 ///***************************************************************************************///
 //light
 static ssize_t attr_als_enable_show(struct device *dev,
@@ -1491,6 +1460,22 @@ static struct device_attribute attrs_light[] = {
     __ATTR(delay,                          0640,   attr_als_poll_time_show,                    attr_als_poll_time_store),
     __ATTR(light_value,                    0444,   attr_get_als_value,                         NULL),
 };
+
+/*
+static struct device_attribute attributes[] = {
+#ifdef CONFIG_FEATURE_ZTEMT_SENSORS_LOG_ON
+	__ATTR(taos_als_adc_time,                   0644,   attr_get_als_adc_time,                      attr_set_als_adc_time),
+
+	__ATTR(taos_prox_calibrate,                 0644,   NULL,                                       attr_set_prox_calibrate),
+	__ATTR(taos_prox_calibrate_hi_param,        0644,   attr_get_prox_calibrate_hi_param,           attr_set_prox_calibrate_hi_param),
+	__ATTR(taos_prox_calibrate_lo_param,        0644,   attr_get_prox_calibrate_lo_param,           attr_set_prox_calibrate_lo_param),
+
+	__ATTR(th_hi,                               0644,   attr_get_threshold_hi,                      attr_set_threshold_hi),
+	__ATTR(th_low,                              0644,   attr_get_threshold_lo,                      attr_set_threshold_lo),
+};
+*/
+
+
 
 
 static struct device_attribute attrs_prox[] = {
