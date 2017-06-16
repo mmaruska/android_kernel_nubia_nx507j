@@ -230,7 +230,6 @@ static struct class         *light_class;
 
 
 //iVIZM
-static char pro_buf[4]; //iVIZM
 static int mcount = 0; //iVIZM
 static bool pro_ft = false; //by clli2
 static bool flag_prox_debug = false;
@@ -1945,6 +1944,7 @@ static int taos_als_get_data(void)//iVIZM
 
 static int taos_prox_threshold_set(void)//iVIZM
 {
+	static char pro_buf[4]; //iVIZM
 	int i,ret = 0;
 	u8 chdata[6];
 	u16 proxdata = 0;
