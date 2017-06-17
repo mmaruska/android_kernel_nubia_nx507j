@@ -1721,71 +1721,74 @@ static void tmd2772_data_init(struct taos_data *taos_datap)
 #define TMD2772_VIO_MIN_UV 1750000
 #define TMD2772_VIO_MAX_UV 1950000
 
-static int tmd2772_power_init(struct taos_data *chip, bool on)
+static int tmd2772_power_off(struct taos_data *chip)
+{
+	pr_info("off\n");
+	if (regulator_count_voltages(chip->vdd) > 0)
+		regulator_set_voltage(chip->vdd, 0,
+				      TMD2772_VDD_MAX_UV);
+	regulator_put(chip->vdd);
+
+	if (regulator_count_voltages(chip->vio) > 0)
+		regulator_set_voltage(chip->vio, 0,
+				      TMD2772_VIO_MAX_UV);
+	regulator_put(chip->vio);
+	return 0;
+}
+
+static int tmd2772_power_on(struct taos_data *chip)
 {
 	int rc = 0;
-	pr_info("on= %d\n", on);
+	pr_info("on");
 
-	if (!on) {
-		if (regulator_count_voltages(chip->vdd) > 0)
-			regulator_set_voltage(chip->vdd, 0,
-					      TMD2772_VDD_MAX_UV);
-		regulator_put(chip->vdd);
-
-		if (regulator_count_voltages(chip->vio) > 0)
-			regulator_set_voltage(chip->vio, 0,
-					      TMD2772_VIO_MAX_UV);
-		regulator_put(chip->vio);
-	} else {
-		chip->vdd = regulator_get(&chip->client->dev,"vdd");
-		if(IS_ERR(chip->vdd)) {
-			rc = PTR_ERR(chip->vdd);
-			dev_err(&chip->client->dev,
-				"Regulator get failed vdd rc=%d\n", rc);
-			return rc;
-		}
-		if (regulator_count_voltages(chip->vdd) > 0) {
-			rc = regulator_set_voltage(chip->vdd,
-						   TMD2772_VDD_MIN_UV, TMD2772_VDD_MAX_UV);
-			if (rc) {
-				dev_err(&chip->client->dev,
-					"Regulator set failed vdd rc=%d\n",
-					rc);
-				goto err_vdd_set;
-			}
-		}
-
-		chip->vio = regulator_get(&chip->client->dev, "vio");
-		if (IS_ERR(chip->vio)) {
-			rc = PTR_ERR(chip->vio);
-			dev_err(&chip->client->dev,
-				"Regulator get failed vio rc=%d\n", rc);
-			goto err_vio_get;
-		}
-
-		if (regulator_count_voltages(chip->vio) > 0) {
-			rc = regulator_set_voltage(chip->vio,
-						   TMD2772_VIO_MIN_UV, TMD2772_VIO_MAX_UV);
-			if (rc) {
-				dev_err(&chip->client->dev,
-					"Regulator set failed vio rc=%d\n", rc);
-				goto err_vio_set;
-			}
-		}
-
-		rc = regulator_enable(chip->vdd);
+	chip->vdd = regulator_get(&chip->client->dev,"vdd");
+	if(IS_ERR(chip->vdd)) {
+		rc = PTR_ERR(chip->vdd);
+		dev_err(&chip->client->dev,
+			"Regulator get failed vdd rc=%d\n", rc);
+		return rc;
+	}
+	if (regulator_count_voltages(chip->vdd) > 0) {
+		rc = regulator_set_voltage(chip->vdd,
+					   TMD2772_VDD_MIN_UV, TMD2772_VDD_MAX_UV);
 		if (rc) {
 			dev_err(&chip->client->dev,
-				"Regulator vdd enable failed rc=%d\n", rc);
-			goto err_vdd_enable;
+				"Regulator set failed vdd rc=%d\n",
+				rc);
+			goto err_vdd_set;
 		}
+	}
 
-		rc = regulator_enable(chip->vio);
+	chip->vio = regulator_get(&chip->client->dev, "vio");
+	if (IS_ERR(chip->vio)) {
+		rc = PTR_ERR(chip->vio);
+		dev_err(&chip->client->dev,
+			"Regulator get failed vio rc=%d\n", rc);
+		goto err_vio_get;
+	}
+
+	if (regulator_count_voltages(chip->vio) > 0) {
+		rc = regulator_set_voltage(chip->vio,
+					   TMD2772_VIO_MIN_UV, TMD2772_VIO_MAX_UV);
 		if (rc) {
 			dev_err(&chip->client->dev,
-				"Regulator vio enable failed rc=%d\n", rc);
-			goto err_vio_enable;
+				"Regulator set failed vio rc=%d\n", rc);
+			goto err_vio_set;
 		}
+	}
+
+	rc = regulator_enable(chip->vdd);
+	if (rc) {
+		dev_err(&chip->client->dev,
+			"Regulator vdd enable failed rc=%d\n", rc);
+		goto err_vdd_enable;
+	}
+
+	rc = regulator_enable(chip->vio);
+	if (rc) {
+		dev_err(&chip->client->dev,
+			"Regulator vio enable failed rc=%d\n", rc);
+		goto err_vio_enable;
 	}
 
 	pr_err("success\n");
@@ -1856,8 +1859,7 @@ static int __devinit tmd2772_probe(struct i2c_client *clientp, const struct i2c_
 
 	i2c_set_clientdata(clientp, taos_datap);
 
-	ret = tmd2772_power_init(taos_datap, 1);
-	if (ret < 0) {
+	if ((ret = tmd2772_power_on(taos_datap)) < 0) {
 		goto power_init_failed;
 	}
 
@@ -2078,7 +2080,7 @@ create_proximity_dev_failed:
 	taos_datap->proximity_dev = NULL;
 	class_destroy(proximity_class);
 read_chip_id_failed:
-	tmd2772_power_init(taos_datap, 0);
+	tmd2772_power_off(taos_datap);
 power_init_failed:
 	kfree(taos_datap);
 
