@@ -2040,6 +2040,7 @@ static int __devinit tmd2772_probe(struct i2c_client *clientp, const struct i2c_
 		pr_err("device_create proximity failed\n");
 		goto create_proximity_dev_failed;
 	}
+	dev_set_drvdata(taos_datap->proximity_dev, taos_datap);
 
 	taos_datap->light_dev= device_create(light_class, NULL, tmd2772_light_dev_t, &tmd2772_driver ,"light");
 	if (IS_ERR(taos_datap->light_dev)) {
@@ -2047,6 +2048,7 @@ static int __devinit tmd2772_probe(struct i2c_client *clientp, const struct i2c_
 		pr_err("device_create light failed\n");
 		goto create_light_dev_failed;
 	}
+	dev_set_drvdata(taos_datap->light_dev, taos_datap);
 
 	//prox input
 	taos_datap->p_idev = input_allocate_device();
@@ -2102,8 +2104,6 @@ static int __devinit tmd2772_probe(struct i2c_client *clientp, const struct i2c_
 		goto input_a_register_failed;
 	}
 
-	dev_set_drvdata(taos_datap->proximity_dev, taos_datap);
-	dev_set_drvdata(taos_datap->light_dev, taos_datap);
 
 
 	create_sysfs_interfaces_prox(taos_datap->proximity_dev);
