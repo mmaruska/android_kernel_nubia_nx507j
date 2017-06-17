@@ -83,7 +83,9 @@ static int taos_prox_on(void);
 static int taos_prox_off(void);
 static int taos_prox_calibrate(void);
 static void taos_prox_offset_cal_work_func(struct work_struct *work);
-static void taos_wakelock_ops(struct taos_wake_lock *wakelock, bool enable);
+static void taos_wakelock_unlock(struct taos_wake_lock *wakelock);
+static void taos_wakelock_lock(struct taos_wake_lock *wakelock);
+
 static int taos_write_cal_file(char *file_path,unsigned int value);
 static int taos_read_cal_value(char *file_path);
 static enum hrtimer_restart  taos_prox_unwakelock_work_func(struct hrtimer *timer);
@@ -572,11 +574,11 @@ static ssize_t attr_prox_prox_wakelock_store(struct device *dev, struct device_a
 
 	mutex_lock(&chip->lock);
 	if (recv) {
-		taos_wakelock_ops(&(chip->proximity_wakelock),true);
+		taos_wakelock_lock(&(chip->proximity_wakelock));
 	} else {
 		//cancel_delayed_work_sync(&chip->prox_unwakelock_work);
 		hrtimer_cancel(&taos_datap->prox_unwakelock_timer);
-		taos_wakelock_ops(&(chip->proximity_wakelock),false);
+		taos_wakelock_unlock(&(chip->proximity_wakelock));
 	}
 	mutex_unlock(&chip->lock);
 	return size;
@@ -1308,23 +1310,32 @@ static int create_sysfs_interfaces_light(struct device *dev)
 	return create_sysfs_interfaces(dev, attrs_light, ARRAY_SIZE(attrs_light));
 }
 
-
-static void taos_wakelock_ops(struct taos_wake_lock *wakelock, bool enable)
+static void taos_wakelock_lock(struct taos_wake_lock *wakelock)
 {
-	if (enable == wakelock->locked) {
-		pr_info("double %s %s, do nothing\n",enable? "lock" : "unlock", wakelock->name);
+	if (wakelock->locked) {
+		pr_info("double lock %s, do nothing\n", wakelock->name);
 		return;
 	}
 
-	if (enable) {
-		wake_lock(&wakelock->lock);
-	} else {
-		wake_unlock(&wakelock->lock);
+	wake_lock(&wakelock->lock);
+
+	wakelock->locked = true;
+
+	pr_info("lock %s\n", wakelock->name);
+}
+
+static void taos_wakelock_unlock(struct taos_wake_lock *wakelock)
+{
+	if (!wakelock->locked) {
+		pr_info("double unlock %s, do nothing\n", wakelock->name);
+		return;
 	}
 
-	wakelock->locked = enable;
+	wake_unlock(&wakelock->lock);
 
-	pr_info("%s %s \n",enable? "lock" : "unlock",wakelock->name);
+	wakelock->locked = false;
+
+	pr_info("unlock %s\n", wakelock->name);
 }
 
 static int taos_write_cal_file(char *file_path,unsigned int value)
@@ -1453,8 +1464,8 @@ static irqreturn_t taos_irq_handler(int irq, void *dev_id) //iVIZM
 	pr_info("enter %s\n", __func__);
 	taos_datap->irq_work_status = true;
 	taos_disable_irq(false);
-	taos_wakelock_ops(&(taos_datap->proximity_wakelock), true);
 	if (0==queue_work(taos_datap->irq_work_queue, &taos_datap->irq_work)) {
+	taos_wakelock_lock(&taos_datap->proximity_wakelock); /* I agree */
 		pr_info("schedule_work failed!\n");
 	}
 	pr_info("exit\n");
@@ -2578,7 +2589,7 @@ static enum hrtimer_restart  taos_prox_unwakelock_work_func(struct hrtimer *time
 {
 	pr_info("######## taos_prox_unwakelock_timer_func #########\n");
 	if(false == taos_datap->irq_work_status )
-		taos_wakelock_ops(&(taos_datap->proximity_wakelock),false);
+		taos_wakelock_unlock(&(taos_datap->proximity_wakelock));
 	return HRTIMER_NORESTART;
 
 }
@@ -2767,7 +2778,7 @@ static int taos_prox_off(void)
 
 	if (true == (taos_datap->proximity_wakelock).locked) {
 		hrtimer_cancel(&taos_datap->prox_unwakelock_timer);
-		taos_wakelock_ops(&(taos_datap->proximity_wakelock), false);
+		taos_wakelock_unlock(&(taos_datap->proximity_wakelock));
 	}
 
 	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_CNTRL), 0x00))) < 0) {
