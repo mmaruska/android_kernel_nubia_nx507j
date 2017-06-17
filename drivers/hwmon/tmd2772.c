@@ -1865,8 +1865,7 @@ static int __devinit tmd2772_probe(struct i2c_client *clientp, const struct i2c_
 
 	msleep(10);
 
-	ret = tmd2772_chip_detect(taos_datap);
-	if (ret) {
+	if ((ret = tmd2772_chip_detect(taos_datap))) {
 		goto read_chip_id_failed;
 	}
 
