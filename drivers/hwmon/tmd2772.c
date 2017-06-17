@@ -2093,7 +2093,7 @@ static int taos_resume(struct i2c_client *client)
 {
 	int ret = 0;
 	pr_info("enter %s\n", __func__);
-	if(1 == taos_datap->prox_on) {
+	if(taos_datap->prox_on) {
 		pr_info("----------%s: %d: disable irq wakeup\n",__func__,__LINE__);
 		ret = disable_irq_wake(taos_datap->client->irq);
 	}
@@ -2108,7 +2108,7 @@ static int taos_suspend(struct i2c_client *client, pm_message_t mesg)
 {
 	int ret = 0;
 	pr_info("enter %s\n", __func__);
-	if(1 == taos_datap->prox_on) {
+	if(taos_datap->prox_on) {
 		pr_info("----------%s: %d: enable irq wakeup\n",__func__,__LINE__);
 		ret = enable_irq_wake(taos_datap->client->irq);
 	}
@@ -2678,7 +2678,7 @@ static int taos_prox_on(void)
 	int  ret = 0;
 	u8 reg_cntrl = 0, i = 0 ,j = 0;
 
-	taos_datap->prox_on = 1;
+	taos_datap->prox_on = true;
 	als_poll_time_mul = 2;
 
 	pr_info("######## TAOS IOCTL PROX ON  ######## \n");
@@ -2771,7 +2771,7 @@ static int taos_prox_off(void)
 		return (ret);
 	}
 
-	taos_datap->prox_on = 0;
+	taos_datap->prox_on = false;
 	als_poll_time_mul = 1;
 
 	if (true == taos_datap->als_on) {
