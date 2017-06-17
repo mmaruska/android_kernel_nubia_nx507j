@@ -1279,35 +1279,29 @@ static struct device_attribute attrs_prox[] = {
 };
 
 
-
-static int create_sysfs_interfaces_prox(struct device *dev)
+static int create_sysfs_interfaces(struct device *dev, struct device_attribute *attrs, int size)
 {
 	int i;
-	for (i = 0; i < ARRAY_SIZE(attrs_prox); i++)
-		if (device_create_file(dev, attrs_prox + i))
+	for (i = 0; i < size; i++)
+		if (device_create_file(dev, attrs + i))
 			goto error;
 	return 0;
 
 error:
 	for ( ; i >= 0; i--)
-		device_remove_file(dev, attrs_prox + i);
+		device_remove_file(dev, attrs + i);
 	dev_err(dev, "%s:Unable to create interface\n", __func__);
 	return -1;
 }
 
+static int create_sysfs_interfaces_prox(struct device *dev)
+{
+	return create_sysfs_interfaces(dev, attrs_prox, ARRAY_SIZE(attrs_prox));
+}
+
 static int create_sysfs_interfaces_light(struct device *dev)
 {
-	int i;
-	for (i = 0; i < ARRAY_SIZE(attrs_light); i++)
-		if (device_create_file(dev, attrs_light + i))
-			goto error;
-	return 0;
-
-error:
-	for ( ; i >= 0; i--)
-		device_remove_file(dev, attrs_light + i);
-	dev_err(dev, "%s:Unable to create interface\n", __func__);
-	return -1;
+	return create_sysfs_interfaces(dev, attrs_light, ARRAY_SIZE(attrs_light));
 }
 
 
