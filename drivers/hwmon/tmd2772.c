@@ -54,6 +54,8 @@
 
 //#define IRQ_TRIGER_LEVEL_LOW
 
+struct taos_data;
+
 // forward declarations
 static int tmd2772_probe(struct i2c_client *clientp, const struct i2c_device_id *idp);
 static int tmd2772_remove(struct i2c_client *client);
@@ -64,7 +66,7 @@ static int taos_prox_poll(struct taos_prox_info *prxp);
 static void taos_prox_poll_timer_func(unsigned long param);
 static void taos_prox_poll_timer_start(void);
 //iVIZM
-static int taos_prox_threshold_set(void);
+static int taos_prox_threshold_set(struct taos_data *taos_datap);
 static int taos_als_get_data(void);
 static int taos_interrupts_clear(void);
 static int taos_resume(struct i2c_client *client);
@@ -1441,7 +1443,7 @@ static void taos_irq_work_func(struct work_struct * work) //iVIZM
 
 static void taos_flush_work_func(struct work_struct * work) //iVIZM
 {
-	taos_prox_threshold_set();
+	taos_prox_threshold_set(taos_datap);
 }
 static irqreturn_t taos_irq_handler(int irq, void *dev_id) //iVIZM
 {
@@ -1466,7 +1468,7 @@ static int taos_get_data(void)//iVIZM
 		pr_err("read TAOS_TRITON_STATUS failed\n");
 		return ret;
 	} else {
-		ret = taos_prox_threshold_set();
+		ret = taos_prox_threshold_set(taos_datap);
 	}
 	return ret;
 }
@@ -1544,7 +1546,7 @@ static int taos_als_get_data(void)//iVIZM
 	return ret;
 }
 
-static int taos_prox_threshold_set(void)//iVIZM
+static int taos_prox_threshold_set(struct taos_data *taos_datap)
 {
 	static char pro_buf[4]; //iVIZM
 	int i,ret = 0;
@@ -1685,7 +1687,7 @@ static int tmd2772_parse_dt(struct taos_data *chip)
 	return 0;
 }
 
-static void tmd2772_data_init(void)
+static void tmd2772_data_init(struct taos_data *taos_datap)
 {
 	taos_datap->als_on  = false;
 	taos_datap->prox_on = false;
@@ -1874,7 +1876,7 @@ static int __devinit tmd2772_probe(struct i2c_client *clientp, const struct i2c_
 
 	tmd2772_parse_dt(taos_datap);
 
-	tmd2772_data_init();
+	tmd2772_data_init(taos_datap);
 
 	for (i = 0; i < TAOS_MAX_DEVICE_REGS; i++) {
 		if ((ret = (i2c_smbus_write_byte(clientp, (TAOS_TRITON_CMD_REG | (TAOS_TRITON_CNTRL + i))))) < 0) {
@@ -2748,7 +2750,7 @@ static int taos_prox_on(void)
 			input_sync(taos_datap->p_idev);
 		}
 	}
-	taos_prox_threshold_set();
+	taos_prox_threshold_set(taos_datap);
 	taos_enable_irq();
 	return (ret);
 }
