@@ -1608,7 +1608,7 @@ static int taos_read_doubleregister(int register_number)
 
 static int taos_prox_threshold_set(struct taos_data *taos_datap)
 {
-	static char pro_buf[4]; //iVIZM
+	char pro_buf[4];	/* static, so cannot be used in parallel! */
 	int i,ret = 0;
 	u8 chdata[6];
 	u16 proxdata = 0;
