@@ -1329,52 +1329,56 @@ static void taos_wakelock_ops(struct taos_wake_lock *wakelock, bool enable)
 
 static int taos_write_cal_file(char *file_path,unsigned int value)
 {
+	int res = -1;
 	struct file *file_p;
 	char write_buf[10];
 	mm_segment_t old_fs;
 	int vfs_write_retval=0;
-	if (NULL==file_path) {
-		pr_err("file_path is NULL\n");
 
+	if (!file_path) {
+		pr_err("file_path is NULL\n");
+		goto error_open;
 	}
+
 	memset(write_buf, 0, sizeof(write_buf));
 	sprintf(write_buf, "%d\n", value);
-	file_p = filp_open(file_path, O_CREAT|O_RDWR , 0665);
+
+	file_p = filp_open(file_path, O_CREAT|O_RDWR , 0665); /* symbolic? */
 	if (IS_ERR(file_p)) {
-		pr_err("[open file <%s>failed]\n",file_path);
-		goto error;
+		pr_err("[open file <%s>failed]\n", file_path);
+		goto error_open;
 	}
-	old_fs = get_fs();
+	old_fs = get_fs();	/* ??? */
 	set_fs(KERNEL_DS);
 
 	vfs_write_retval = vfs_write(file_p, (char*)write_buf, sizeof(write_buf), &file_p->f_pos);
 	if (vfs_write_retval < 0) {
-		pr_err("[write file <%s>failed]\n",file_path);
-		goto error;
+		pr_err("[write file <%s>failed]\n", file_path);
+		// bug! restore fs!
+		goto error_write;
 	}
+	res = 1;
 
+error_write:
 	set_fs(old_fs);
 	filp_close(file_p, NULL);
-
-
-	return 1;
-
-error:
-	return -1;
+error_open:
+	return res;
 }
 
 
 static int taos_read_cal_value(char *file_path)
 {
+	int res = -1;
 	struct file *file_p;
 	int vfs_read_retval = 0;
 	mm_segment_t old_fs;
 	char read_buf[32];
 	unsigned short read_value;
 
-	if (NULL==file_path) {
+	if (!file_path) {
 		pr_err("file_path is NULL\n");
-		goto error;
+		goto error_open;
 	}
 
 	memset(read_buf, 0, 32);
@@ -1382,7 +1386,7 @@ static int taos_read_cal_value(char *file_path)
 	file_p = filp_open(file_path, O_RDONLY , 0);
 	if (IS_ERR(file_p)) {
 		pr_err("[open file <%s>failed]\n",file_path);
-		goto error;
+		goto error_open;
 	}
 
 	old_fs = get_fs();
@@ -1391,23 +1395,22 @@ static int taos_read_cal_value(char *file_path)
 	vfs_read_retval = vfs_read(file_p, (char*)read_buf, 16, &file_p->f_pos);
 	if (vfs_read_retval < 0) {
 		pr_err("[read file <%s>failed]\n",file_path);
-		goto error;
+		goto error_read;
 	}
-
-	set_fs(old_fs);
-	filp_close(file_p, NULL);
 
 	if (kstrtou16(read_buf, 10, &read_value) < 0) {
 		pr_err("[kstrtou16 %s failed]\n",read_buf);
-		goto error;
+		goto error_read;
 	}
 
 	pr_err("[the content of %s is %s]\n", file_path, read_buf);
 
-	return read_value;
-
-error:
-	return -1;
+	res = read_value;
+error_read:
+	set_fs(old_fs);
+	filp_close(file_p, NULL);
+error_open:
+	return res;
 }
 
 static void taos_irq_work_func(struct work_struct * work) //iVIZM
