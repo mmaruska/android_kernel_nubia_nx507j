@@ -1444,15 +1444,22 @@ static void taos_irq_work_func(struct work_struct * work) //iVIZM
 		}
 		mdelay(20);
 	}
-	taos_interrupts_clear();
+	// mmc: I'd move this below taos_enable_irq():
+	// xxx
 
 	hrtimer_cancel(&taos_datap->prox_unwakelock_timer);
+	/* mmc: it seems this covers the interval when the DEVICE has irq ON. */
 	taos_datap->irq_work_status = false;
-// pr_info("########  taos_irq_work_func enter   hrtimer_start #########\n");
-	hrtimer_start(&taos_datap->prox_unwakelock_timer, ktime_set(3, 0), HRTIMER_MODE_REL);
+	// pr_info("########  taos_irq_work_func enter   hrtimer_start #########\n");
+	hrtimer_start(&taos_datap->prox_unwakelock_timer,
+		      ktime_set(3, 0), HRTIMER_MODE_REL);
 
-	taos_enable_irq();
-	pr_info("retry_times = %d\n", retry_times);
+	taos_enable_irq();	/* if now IRQ runs, and disables, what will happen? */
+
+	// xxx
+	taos_interrupts_clear(); /* from now on a new one can arrive. */
+
+	pr_info("%s retry_times = %d\n", __func__, retry_times);
 	mutex_unlock(&taos_datap->lock);
 }
 
