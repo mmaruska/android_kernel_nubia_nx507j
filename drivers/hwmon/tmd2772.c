@@ -96,9 +96,11 @@ static bool pro_ft = false; //by clli2
 static bool flag_prox_debug = false;
 static bool flag_als_debug  = false;
 static bool flag_just_open_light = false;
+
 static unsigned int als_poll_delay = 1000;
-static unsigned int prox_debug_delay_time = 0;
-static int als_poll_time_mul  = 1;
+static unsigned int prox_debug_delay_time = 0; /* mmc: suspicious -- useless? */
+
+static int als_poll_time_mul  = 1; /* fixme! */
 static unsigned char reg_addr = 0;
 static bool wakeup_from_sleep = false;
 
@@ -286,6 +288,7 @@ static void taos_enable_irq(void)
 	enable_irq(taos_datap->client->irq);
 }
 
+// non-sync only from the IRQ handler!
 static void taos_disable_irq(bool flag_sync)
 {
 	if (!taos_datap->irq_enabled) {
@@ -366,6 +369,7 @@ static ssize_t attr_get_als_adc_time(struct device *dev,
 	return sprintf(buf, "als_adc_time is 2.72 * %d ms\n", 255 - taos_cfgp->prox_int_time);
 }
 
+// absolute duplicated code! different register
 static ssize_t attr_set_prox_adc_time(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t size)
 {
@@ -378,6 +382,7 @@ static ssize_t attr_get_prox_adc_time(struct device *dev,
 	return sprintf(buf, "prox_adc_time is 2.72 * %d ms\n", 255 - taos_cfgp->prox_adc_time);
 }
 
+// same code!
 static ssize_t attr_set_wait_time(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t size)
 {
@@ -974,7 +979,7 @@ static ssize_t attr_get_reg_data(struct device *dev,
 static ssize_t attr_get_prox_value(struct device *dev,
 		struct device_attribute *attr, char *buf) {
 	dev_err(dev, "get_prox_value\n");
-	schedule_delayed_work(&taos_datap->prox_flush_work, msecs_to_jiffies(200));
+	schedule_delayed_work(&taos_datap->prox_flush_work, msecs_to_jiffies(200)); /* fixme! */
 	return sprintf(buf, "%d\n", prox_cur_infop->prox_data % 100000);
 }
 
@@ -1118,6 +1123,7 @@ static ssize_t attr_prox_init_store(struct device *dev,
 			taos_datap->prox_calibrate_flag = true;
 		} else {
 			if (ret==0) {
+			/* so use the 499: */
 				taos_datap->prox_calibrate_flag = true;
 				dev_err(dev, "taos_prox_calibrate==1\n");
 			} else {
@@ -1130,6 +1136,7 @@ static ssize_t attr_prox_init_store(struct device *dev,
 				taos_cfgp->prox_threshold_lo = taos_cfgp->prox_threshold_hi - PROX_THRESHOLD_DISTANCE;
 				taos_cfgp->prox_threshold_lo = (taos_cfgp->prox_threshold_lo < taos_datap->prox_thres_lo_max) ? taos_cfgp->prox_threshold_lo : taos_datap->prox_thres_lo_max;
 				taos_cfgp->prox_threshold_lo = (taos_cfgp->prox_threshold_lo > taos_datap->prox_thres_lo_min) ? taos_cfgp->prox_threshold_lo : taos_datap->prox_thres_lo_min;
+				// 2 axis:
 				input_report_rel(taos_datap->p_idev, REL_Y, taos_cfgp->prox_threshold_hi);
 				input_report_rel(taos_datap->p_idev, REL_Z, taos_cfgp->prox_threshold_lo);
 				input_sync(taos_datap->p_idev);
@@ -1275,6 +1282,7 @@ static void taos_wakelock_unlock(struct taos_wake_lock *wakelock)
 	pr_info("unlock %s\n", wakelock->name);
 }
 
+// fixme: return 0 on success?
 static int taos_write_cal_file(char *file_path,unsigned int value)
 {
 	int res = -1;
@@ -1564,7 +1572,7 @@ static int taos_prox_threshold_set(struct taos_data *taos_datap)
 	cleardata = chdata[0] + chdata[1]*256;
 	proxdata = chdata[4] + chdata[5]*256;
 
-	if (pro_ft || flag_prox_debug) {
+	if (pro_ft || flag_prox_debug) { /* mmc? */
 		pro_buf[0] = 0xff;
 		pro_buf[1] = 0xff;
 		pro_buf[2] = 0xff;
@@ -1579,14 +1587,16 @@ static int taos_prox_threshold_set(struct taos_data *taos_datap)
 
 		if (flag_prox_debug) {
 			mdelay(prox_debug_delay_time);
-			pr_info( "proxdata = %d",proxdata);
-			input_report_rel(taos_datap->p_idev, REL_MISC, proxdata>0? proxdata:1);
+			pr_info("proxdata = %d", proxdata); /* mmc: this prints reasonable data! */
+			input_report_rel(taos_datap->p_idev, REL_MISC, proxdata > 0 ? proxdata : 1); // 1 is the minimum?
 
 		}
-		pro_ft = false;
+		pro_ft = false;	/* why? */
 	} else {
+
 		if (proxdata < taos_cfgp->prox_threshold_lo)
 		{   //FAR
+			// mmc: does this say the limit ... edge-interrupt?
 			pro_buf[0] = 0x0;
 			pro_buf[1] = 0x0;
 			pro_buf[2] = taos_cfgp->prox_threshold_hi & 0x0ff;
@@ -2776,6 +2786,7 @@ static int taos_prox_calibrate(void)
 	u8 reg_val = 0;
 	int i = 0, j = 0;
 
+	// space for the samples:
 	struct taos_prox_info *prox_cal_info = NULL;
 	prox_cal_info = kzalloc(sizeof(struct taos_prox_info) * (taos_datap->prox_calibrate_times), GFP_KERNEL);
 	if (NULL == prox_cal_info) {
