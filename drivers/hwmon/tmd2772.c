@@ -91,7 +91,6 @@ static struct class         *light_class;
 
 
 //iVIZM
-static int mcount = 0; //iVIZM
 static bool pro_ft = false; //by clli2
 static bool flag_prox_debug = false;
 static bool flag_als_debug  = false;
@@ -1103,8 +1102,8 @@ static ssize_t attr_prox_init_store(struct device *dev,
 	mutex_lock(&taos_datap->lock);
 	dev_info(dev, "enter %s\n", __func__);
 
-	if (value ==1) {
-		if((ret=taos_read_cal_value(PATH_PROX_OFFSET))>0) {
+	if (value == 1) {
+		if((ret=taos_read_cal_value(PATH_PROX_OFFSET))>0) { // 139
 			taos_cfgp->prox_config_offset = ret;
 		}
 
@@ -1112,9 +1111,9 @@ static ssize_t attr_prox_init_store(struct device *dev,
 			compute_thresholds_from_level(ret);
 		}
 
-		if((ret=taos_read_cal_value(CAL_THRESHOLD))<0) {
-			dev_err(dev, "tmg399x_prox_init<0\n");
-			err=taos_write_cal_file(CAL_THRESHOLD,0);
+		if((ret = taos_read_cal_value(CAL_THRESHOLD)) < 0) { /* 499 */
+			dev_err(dev, "tmg399x_prox_init < 0\n");
+			err=taos_write_cal_file(CAL_THRESHOLD,0); /* default value */
 			if(err<0) {
 				dev_err(dev, "ERROR=%s\n",CAL_THRESHOLD);
 				mutex_unlock(&taos_datap->lock);
@@ -1122,8 +1121,8 @@ static ssize_t attr_prox_init_store(struct device *dev,
 			}
 			taos_datap->prox_calibrate_flag = true;
 		} else {
-			if (ret==0) {
 			/* so use the 499: */
+			if (ret == 0) {
 				taos_datap->prox_calibrate_flag = true;
 				dev_err(dev, "taos_prox_calibrate==1\n");
 			} else {
@@ -1133,12 +1132,15 @@ static ssize_t attr_prox_init_store(struct device *dev,
 				taos_cfgp->prox_threshold_hi = ret;
 				taos_cfgp->prox_threshold_hi = (taos_cfgp->prox_threshold_hi < taos_datap->prox_thres_hi_max) ? taos_cfgp->prox_threshold_hi : taos_datap->prox_thres_hi_max;
 				taos_cfgp->prox_threshold_hi = (taos_cfgp->prox_threshold_hi > taos_datap->prox_thres_hi_min) ? taos_cfgp->prox_threshold_hi : taos_datap->prox_thres_hi_min;
+
 				taos_cfgp->prox_threshold_lo = taos_cfgp->prox_threshold_hi - PROX_THRESHOLD_DISTANCE;
 				taos_cfgp->prox_threshold_lo = (taos_cfgp->prox_threshold_lo < taos_datap->prox_thres_lo_max) ? taos_cfgp->prox_threshold_lo : taos_datap->prox_thres_lo_max;
 				taos_cfgp->prox_threshold_lo = (taos_cfgp->prox_threshold_lo > taos_datap->prox_thres_lo_min) ? taos_cfgp->prox_threshold_lo : taos_datap->prox_thres_lo_min;
+
 				// 2 axis:
 				input_report_rel(taos_datap->p_idev, REL_Y, taos_cfgp->prox_threshold_hi);
 				input_report_rel(taos_datap->p_idev, REL_Z, taos_cfgp->prox_threshold_lo);
+
 				input_sync(taos_datap->p_idev);
 				dev_err(dev, "taos_prox_init %d\n", ret);
 			}
@@ -1369,7 +1371,8 @@ error_open:
 	return res;
 }
 
-static void taos_irq_work_func(struct work_struct * work) //iVIZM
+// see below
+static void taos_irq_work_func(struct work_struct * work)
 {
 	int retry_times = 0;
 	int ret;
@@ -1411,39 +1414,55 @@ static void taos_flush_work_func(struct work_struct * work) //iVIZM
 {
 	taos_prox_threshold_set(taos_datap);
 }
-static irqreturn_t taos_irq_handler(int irq, void *dev_id) //iVIZM
+
+static irqreturn_t taos_irq_handler(int irq, void *dev_id)
 {
 	pr_info("enter %s\n", __func__);
 	taos_datap->irq_work_status = true;
-	taos_disable_irq(false);
-	if (0==queue_work(taos_datap->irq_work_queue, &taos_datap->irq_work)) {
+	taos_disable_irq(false); /* async. why? b/c I want it once on the workqueue */
 	taos_wakelock_lock(&taos_datap->proximity_wakelock); /* I agree */
+
+	if (queue_work(taos_datap->irq_work_queue, &taos_datap->irq_work)) {
 		pr_info("schedule_work failed!\n");
 	}
 	pr_info("exit\n");
 	return IRQ_HANDLED;
 }
 
-static int taos_get_data(void)//iVIZM
+// after IRQ, the work issues this: so we read the TRITON STATUS
+// but this ignores the content: 
+static int taos_get_data(void)
 {
 	int ret = 0;
 
+	// 0X80 ... mask TAOS_TRITON_CMD_REG | TAOS_TRITON_STATUS ... register
+	// so the TRM page 27.
+	// so this writes u8 i.e. READ protocol as TAOS_TRITON_CMD_REG is 100000 + slave address: 0x13
+	//and now will read:
+	// s32 ... signed + 4 bytes. so?
+	// 00 = Repeated byte protocol transaction 13
+	// so 0x13 register 23 = 2 Proximity Interrupt,   3 PVALID | AVALID
+	// 33 is ...ALS interrupt as well.
 	ret = i2c_smbus_read_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_STATUS));
 
 	if (ret < 0) {
 		pr_err("read TAOS_TRITON_STATUS failed\n");
 		return ret;
 	} else {
+		pr_debug("triton status: %x\n", ret);
+		/* so the just-read byte is ignored? */
 		ret = taos_prox_threshold_set(taos_datap);
 	}
 	return ret;
 }
 
-
+// clears the IRQ inside the i2c device (not host)
 static int taos_interrupts_clear(void)//iVIZM
 {
 	int ret = 0;
-	if ((ret = (i2c_smbus_write_byte(taos_datap->client, (TAOS_TRITON_CMD_REG|TAOS_TRITON_CMD_SPL_FN|0x07)))) < 0) {
+	if ((ret = (i2c_smbus_write_byte(taos_datap->client,
+		    (TAOS_TRITON_CMD_REG | TAOS_TRITON_CMD_SPL_FN | TAOS_TRITON_CMD_PROXALS_INTCLR))))
+	    < 0) {
 		pr_err("TAOS: i2c_smbus_write_byte(2) failed in taos_work_func()\n");
 		return (ret);
 	}
@@ -1558,6 +1577,8 @@ static int taos_read_doubleregister(int register_number)
 	return b[0] + b[1]*256; //
 }
 
+
+
 static int taos_prox_threshold_set(struct taos_data *taos_datap)
 {
 	char pro_buf[4];	/* static, so cannot be used in parallel! */
@@ -1567,12 +1588,15 @@ static int taos_prox_threshold_set(struct taos_data *taos_datap)
 	u16 cleardata = 0;
 
 	for (i = 0; i < 6; i++) {
-		chdata[i] = (i2c_smbus_read_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_CMD_WORD_BLK_RW| (TAOS_TRITON_ALS_CHAN0LO + i))));
+		chdata[i] = (i2c_smbus_read_byte_data(taos_datap->client,
+						      // read protocol          Triton cmd reg masks            register:
+						      (TAOS_TRITON_CMD_REG | TAOS_TRITON_CMD_WORD_BLK_RW | (TAOS_TRITON_ALS_CHAN0LO + i))));
 	}
 	cleardata = chdata[0] + chdata[1]*256;
+	// proxmity ADC data:
 	proxdata = chdata[4] + chdata[5]*256;
 
-	if (pro_ft || flag_prox_debug) { /* mmc? */
+	if (pro_ft || flag_prox_debug) { /* mmc? so the first time? this means it will generate IRQ all the time? */
 		pro_buf[0] = 0xff;
 		pro_buf[1] = 0xff;
 		pro_buf[2] = 0xff;
@@ -1586,14 +1610,12 @@ static int taos_prox_threshold_set(struct taos_data *taos_datap)
 		}
 
 		if (flag_prox_debug) {
-			mdelay(prox_debug_delay_time);
-			pr_info("proxdata = %d", proxdata); /* mmc: this prints reasonable data! */
+			mdelay(prox_debug_delay_time);						     /* why? */
+			pr_info("proxdata = %d", proxdata);					     /* mmc: this prints reasonable data! */
 			input_report_rel(taos_datap->p_idev, REL_MISC, proxdata > 0 ? proxdata : 1); // 1 is the minimum?
-
 		}
 		pro_ft = false;	/* why? */
 	} else {
-
 		if (proxdata < taos_cfgp->prox_threshold_lo)
 		{   //FAR
 			// mmc: does this say the limit ... edge-interrupt?
@@ -1862,7 +1884,6 @@ static int __devinit tmd2772_probe(struct i2c_client *clientp, const struct i2c_
 	}
 
 	taos_datap->client = clientp;
-
 	i2c_set_clientdata(clientp, taos_datap);
 
 	if ((ret = tmd2772_power_on(taos_datap)) < 0) {
@@ -1945,9 +1966,10 @@ static int __devinit tmd2772_probe(struct i2c_client *clientp, const struct i2c_
 		return (ret);
 	}
 
-
 	taos_datap->irq_work_queue = create_singlethread_workqueue("taos_work_queue");
 	if (!taos_datap->irq_work_queue) {
+		// I think
+		// goto read_chip_id_failed;
 		ret = -ENOMEM;
 		pr_info("---------%s: %d: cannot create work taos_work_queue, err = %d",__func__,__LINE__,ret);
 		return ret;
@@ -2049,7 +2071,6 @@ static int __devinit tmd2772_probe(struct i2c_client *clientp, const struct i2c_
 	set_bit(REL_X,  taos_datap->a_idev->relbit);
 	set_bit(REL_Y,  taos_datap->a_idev->relbit);
 
-
 	//chip->a_idev->open = tmg399x_als_idev_open;
 	//chip->a_idev->close = tmg399x_als_idev_close;
 	dev_set_drvdata(&taos_datap->a_idev->dev, taos_datap);
@@ -2059,8 +2080,6 @@ static int __devinit tmd2772_probe(struct i2c_client *clientp, const struct i2c_
 		pr_err("cant register input '%s'\n",taos_datap->prox_name);
 		goto input_a_register_failed;
 	}
-
-
 
 	create_sysfs_interfaces_prox(taos_datap->proximity_dev);
 	create_sysfs_interfaces_light(taos_datap->light_dev);
@@ -2094,8 +2113,9 @@ power_init_failed:
 }
 
 #ifdef CONFIG_PM_SLEEP
-//don't move these pm blew to ioctl
-//resume
+// Don't move these pm blew to ioctl
+
+// resume
 static int taos_resume(struct i2c_client *client)
 {
 	int ret = 0;
@@ -2467,6 +2487,7 @@ static int taos_prox_offset_cal_process(void)
 		goto prox_calibrate_offset_error;
 	}
 
+	/* cntrl reg masks: */
 	reg_cntrl = reg_val | (TAOS_TRITON_CNTL_PROX_DET_ENBL | TAOS_TRITON_CNTL_PWRON | TAOS_TRITON_CNTL_ADC_ENBL);
 	if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_CNTRL), reg_cntrl))) < 0) {
 		pr_err("failed write cntrl reg\n");
@@ -2770,6 +2791,7 @@ static int taos_prox_off(void)
 		taos_sensors_als_poll_on();
 	}
 
+	// mmc: why not?
 	// cancel_work_sync(&taos_datap->irq_work);
 	if (true == taos_datap->irq_enabled) {
 		taos_disable_irq(true);

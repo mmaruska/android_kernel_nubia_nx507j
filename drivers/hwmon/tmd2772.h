@@ -25,10 +25,10 @@
 #define TAOS_TRITON_ALS_MAXTHRESHLO     0X06
 #define TAOS_TRITON_ALS_MAXTHRESHHI     0X07
 // threshold for generating IRQ:
-#if 0
 // mmc: so these are not used, tuned!
 #define TAOS_TRITON_PRX_MINTHRESHLO     0X08
 #define TAOS_TRITON_PRX_MINTHRESHHI     0X09
+#if 0
 // low 2 bytes ^^
 //
 #define TAOS_TRITON_PRX_MAXTHRESHLO     0X0A
@@ -60,13 +60,19 @@
 // Triton cmd reg masks
 //0x by clli2
 #define TAOS_TRITON_CMD_REG             0X80
+// Auto-increment protocol transaction
 #define TAOS_TRITON_CMD_AUTO            0x20
+// Repeated byte protocol transaction ?
 #define TAOS_TRITON_CMD_BYTE_RW         0x00
+
 #define TAOS_TRITON_CMD_WORD_BLK_RW     0x20
+// special function .. used to clear irq, it seems.
 #define TAOS_TRITON_CMD_SPL_FN          0x60
+
 #define TAOS_TRITON_CMD_PROX_INTCLR     0X05
 #define TAOS_TRITON_CMD_ALS_INTCLR      0X06
 #define TAOS_TRITON_CMD_PROXALS_INTCLR  0X07
+// reserved!
 #define TAOS_TRITON_CMD_TST_REG         0X08
 #define TAOS_TRITON_CMD_USER_REG        0X09
 
