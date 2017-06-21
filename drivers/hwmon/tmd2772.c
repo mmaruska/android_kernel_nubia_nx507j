@@ -453,7 +453,7 @@ static ssize_t attr_set_prox_led_pulse_cnt(struct device *dev,
 {
 	unsigned long val;
 	int ret;
-	dev_err(dev, "enter\n");
+	dev_err(dev, "enter %s\n", __func__);
 	if (strict_strtoul(buf, 10, &val)) {
 		return -EINVAL;
 	}
@@ -490,7 +490,7 @@ static ssize_t attr_set_als_adc_time(struct device *dev,
 {
 	unsigned long val;
 	int ret;
-	dev_err(dev, "enter\n");
+	dev_err(dev, "enter %s\n", __func__);
 	if (strict_strtoul(buf, 10, &val)) {
 		return -EINVAL;
 	}
@@ -599,7 +599,7 @@ static ssize_t attr_set_prox_led_strength_level(struct device *dev,
 {
 	unsigned long val;
 	int ret;
-	dev_err(dev, "enter\n");
+	dev_err(dev, "enter %s\n", __func__);
 	if (strict_strtoul(buf, 10, &val)) {
 		return -EINVAL;
 	}
@@ -642,7 +642,7 @@ static ssize_t attr_set_als_gain(struct device *dev,
 {
 	unsigned long val;
 	int ret;
-	dev_err(dev, "enter\n");
+	dev_err(dev, "enter %s\n", __func__);
 	if (strict_strtoul(buf, 10, &val)) {
 		return -EINVAL;
 	}
@@ -686,7 +686,7 @@ static ssize_t attr_set_prox_debug_delay(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t size)
 {
 	unsigned long val;
-	dev_err(dev, "enter\n");
+	dev_err(dev, "enter %s\n", __func__);
 	if (strict_strtoul(buf, 10, &val)) {
 		return -EINVAL;
 	}
@@ -712,7 +712,7 @@ static ssize_t attr_get_prox_debug_delay(struct device *dev,
 static ssize_t attr_prox_debug_store(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t size) {
 	unsigned long val;
-	dev_err(dev, "enter\n");
+	dev_err(dev, "enter %s\n", __func__);
 	if (strict_strtoul(buf, 10, &val)) {
 		return -EINVAL;
 	}
@@ -849,7 +849,7 @@ static ssize_t attr_get_als_debug(struct device *dev,
 static ssize_t attr_set_irq(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t size) {
 	unsigned long val;
-	dev_err(dev, "enter\n");
+	dev_err(dev, "enter %s\n", __func__);
 	if (strict_strtoul(buf, 10, &val)) {
 		return -EINVAL;
 	}
@@ -880,7 +880,7 @@ static ssize_t attr_set_prox_calibrate(struct device *dev,
 	int val,ret;
 
 	ret=kstrtouint(buf, 10, &val);
-	dev_err(dev, "enter\n");
+	dev_err(dev, "enter %s\n", __func__);
 	if (ret<0) {
 		return -EINVAL;
 	}
@@ -898,7 +898,7 @@ static ssize_t attr_set_prox_calibrate(struct device *dev,
 static ssize_t attr_prox_thres_high_store(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t size) {
 	unsigned long val;
-	dev_err(dev, "enter\n");
+	dev_err(dev, "enter %s\n", __func__);
 	if (strict_strtoul(buf, 10, &val)) {
 		return -EINVAL;
 	}
@@ -927,7 +927,7 @@ static ssize_t attr_prox_thres_high_show(struct device *dev,
 static ssize_t attr_prox_thres_low_store(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t size) {
 	unsigned long val;
-	dev_err(dev, "enter\n");
+	dev_err(dev, "enter %s\n", __func__);
 	if (strict_strtoul(buf, 10, &val)) {
 		return -EINVAL;
 	}
@@ -1008,7 +1008,7 @@ static ssize_t attr_prox_thres_store(struct device *dev,
 static ssize_t attr_set_als_scale_factor_param_prox(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t size) {
 	unsigned long val;
-	dev_err(dev, "enter\n");
+	dev_err(dev, "enter %s\n", __func__);
 	if (strict_strtoul(buf, 10, &val)) {
 		return -EINVAL;
 	}
@@ -1042,7 +1042,7 @@ static ssize_t attr_get_als_scale_factor_param_prox(struct device *dev,
 static ssize_t attr_set_als_scale_factor_param_als(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t size) {
 	unsigned long val;
-	dev_err(dev, "enter\n");
+	dev_err(dev, "enter %s\n", __func__);
 	if (strict_strtoul(buf, 10, &val)) {
 		return -EINVAL;
 	}
@@ -1088,7 +1088,7 @@ static ssize_t attr_get_prox_threshold_high(struct device *dev,
 static ssize_t attr_set_prox_threshold_high(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t size) {
 	unsigned long val;
-	dev_err(dev, "enter\n");
+	dev_err(dev, "enter %s\n", __func__);
 	if (strict_strtoul(buf, 10, &val)) {
 		return -EINVAL;
 	}
@@ -1118,7 +1118,7 @@ static ssize_t attr_get_prox_threshold_low(struct device *dev,
 static ssize_t attr_set_prox_threshold_low(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t size) {
 	unsigned long val;
-	dev_err(dev, "enter\n");
+	dev_err(dev, "enter %s\n", __func__);
 	if (strict_strtoul(buf, 10, &val)) {
 		return -EINVAL;
 	}
@@ -1138,7 +1138,7 @@ static ssize_t attr_set_prox_offset(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t size) {
 	unsigned long val;
 	int ret;
-	dev_err(dev, "enter\n");
+	dev_err(dev, "enter %s\n", __func__);
 	if (strict_strtoul(buf, 10, &val)) {
 		return -EINVAL;
 	}
@@ -1268,7 +1268,7 @@ static ssize_t attr_prox_manual_calibrate_threshold(struct device *dev,
 static ssize_t attr_set_reg_addr(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t size) {
 	unsigned long val;
-	dev_err(dev, "enter\n");
+	dev_err(dev, "enter %s\n", __func__);
 	if (strict_strtoul(buf, 10, &val)) {
 		return -EINVAL;
 	}
@@ -1282,7 +1282,7 @@ static ssize_t attr_set_reg_addr(struct device *dev,
 static ssize_t attr_get_reg_addr(struct device *dev,
 		struct device_attribute *attr, char *buf) {
 
-	dev_err(dev, "enter\n");
+	dev_err(dev, "enter %s\n", __func__);
 	dev_err(dev, "reg_addr = 0x%02X\n",reg_addr);
 	return strlen(buf);
 	dev_err(dev, "exit\n");
@@ -1294,7 +1294,7 @@ static ssize_t attr_set_reg_data(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t size) {
 	unsigned long val;
 	int ret;
-	dev_err(dev, "enter\n");
+	dev_err(dev, "enter %s\n", __func__);
 	if (strict_strtoul(buf, 10, &val)) {
 		return -EINVAL;
 	}
@@ -1454,7 +1454,7 @@ static ssize_t attr_prox_enable_store(struct device *dev,
 	if (strtobool(buf, &value))
 		return -EINVAL;
 	mutex_lock(&chip->lock);
-	dev_info(dev, "enter\n");
+	dev_info(dev, "enter %s\n", __func__);
 
 	if (value) {
 		taos_prox_on();
@@ -1483,7 +1483,7 @@ static ssize_t attr_prox_init_store(struct device *dev,
 	if (ret)
 		return -EINVAL;
 	mutex_lock(&taos_datap->lock);
-	dev_info(dev, "enter\n");
+	dev_info(dev, "enter %s\n", __func__);
 
 	if (value ==1) {
 		if((ret=taos_read_cal_value(PATH_PROX_OFFSET))>0) {
@@ -1556,7 +1556,7 @@ static ssize_t attr_prox_offset_cal_store(struct device *dev,
 		return -EINVAL;
 	}
 	mutex_lock(&taos_datap->lock);
-	dev_info(dev, "enter\n");
+	dev_info(dev, "enter %s\n", __func__);
 
 	if (value ==1) {
 		schedule_delayed_work(&taos_datap->prox_offset_cal_work, msecs_to_jiffies(0));
@@ -1584,7 +1584,7 @@ static ssize_t attr_prox_offset_cal_verify_store(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t size) {
 	unsigned long val = 0;
 
-	dev_err(dev, "enter\n");
+	dev_err(dev, "enter %s\n", __func__);
 	if (strict_strtoul(buf, 10, &val)) {
 		return -EINVAL;
 	}
@@ -1609,7 +1609,7 @@ static ssize_t attr_prox_calibrate_verify_store(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t size) {
 	unsigned long val = 0;
 
-	dev_err(dev, "enter\n");
+	dev_err(dev, "enter %s\n", __func__);
 	if (strict_strtoul(buf, 10, &val)) {
 		return -EINVAL;
 	}
@@ -1810,7 +1810,7 @@ static void taos_irq_work_func(struct work_struct * work) //iVIZM
 	int retry_times = 0;
 	int ret;
 	mutex_lock(&taos_datap->lock);
-	pr_info("enter\n");
+	pr_info("enter %s\n", __func__);
 	if (wakeup_from_sleep) {
 		pr_info("wakeup_from_sleep = true\n");
 		mdelay(50);
@@ -1844,7 +1844,7 @@ static void taos_flush_work_func(struct work_struct * work) //iVIZM
 }
 static irqreturn_t taos_irq_handler(int irq, void *dev_id) //iVIZM
 {
-	pr_info("enter\n");
+	pr_info("enter %s\n", __func__);
 	taos_datap->irq_work_status = true;
 	taos_irq_ops(false, false);
 	taos_wakelock_ops(&(taos_datap->proximity_wakelock), true);
@@ -2490,7 +2490,7 @@ power_init_failed:
 static int taos_resume(struct i2c_client *client)
 {
 	int ret = 0;
-	pr_info("enter\n");
+	pr_info("enter %s\n", __func__);
 	if(1 == taos_datap->prox_on) {
 		pr_info("----------%s: %d: disable irq wakeup\n",__func__,__LINE__);
 		ret = disable_irq_wake(taos_datap->client->irq);
@@ -2505,7 +2505,7 @@ static int taos_resume(struct i2c_client *client)
 static int taos_suspend(struct i2c_client *client, pm_message_t mesg)
 {
 	int ret = 0;
-	pr_info("enter\n");
+	pr_info("enter %s\n", __func__);
 	if(1 == taos_datap->prox_on) {
 		pr_info("----------%s: %d: enable irq wakeup\n",__func__,__LINE__);
 		ret = enable_irq_wake(taos_datap->client->irq);
