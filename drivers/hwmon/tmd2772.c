@@ -284,29 +284,33 @@ static int lux_history[TAOS_FILTER_DEPTH] = {-ENODATA, -ENODATA, -ENODATA};//iVI
 
 static int taos_get_data(void);
 
-
-static void taos_irq_ops(bool enable, bool flag_sync)
+static void taos_enable_irq(void)
 {
-	if (enable == taos_datap->irq_enabled) {
-		pr_info("double %s irq, return here\n",enable? "enable" : "disable");
+	// check:
+	if (taos_datap->irq_enabled) {
+		pr_info("double enable-irq, return here\n");
 		return;
 	} else {
-		taos_datap->irq_enabled  = enable;
+		taos_datap->irq_enabled  = true;
 	}
-
-	if (enable) {
-		enable_irq(taos_datap->client->irq);
-	} else {
-		if (flag_sync) {
-			disable_irq(taos_datap->client->irq);
-		} else {
-			disable_irq_nosync(taos_datap->client->irq);
-		}
-	}
-
-	//pr_info("%s irq \n",enable? "enable" : "disable");
+	enable_irq(taos_datap->client->irq);
 }
 
+static void taos_disable_irq(bool flag_sync)
+{
+	if (!taos_datap->irq_enabled) {
+		pr_info("double disable irq, return here\n");
+		return;
+	} else {
+		taos_datap->irq_enabled  = false;
+	}
+
+	if (flag_sync) {
+		disable_irq(taos_datap->client->irq);
+	} else {
+		disable_irq_nosync(taos_datap->client->irq);
+	}
+}
 
 static ssize_t attr_set_prox_led_pulse_cnt(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t size)
@@ -606,9 +610,9 @@ static ssize_t attr_set_irq(struct device *dev,
 	}
 
 	if (val) {
-		taos_irq_ops(true, true);
+		taos_enable_irq();
 	} else {
-		taos_irq_ops(false, true);
+		taos_disable_irq(true);
 	}
 
 	dev_err(dev, "exit\n");
@@ -1432,7 +1436,7 @@ static void taos_irq_work_func(struct work_struct * work) //iVIZM
 // pr_info("########  taos_irq_work_func enter   hrtimer_start #########\n");
 	hrtimer_start(&taos_datap->prox_unwakelock_timer, ktime_set(3, 0), HRTIMER_MODE_REL);
 
-	taos_irq_ops(true, true);
+	taos_enable_irq();
 	pr_info("retry_times = %d\n", retry_times);
 	mutex_unlock(&taos_datap->lock);
 }
@@ -1445,7 +1449,7 @@ static irqreturn_t taos_irq_handler(int irq, void *dev_id) //iVIZM
 {
 	pr_info("enter %s\n", __func__);
 	taos_datap->irq_work_status = true;
-	taos_irq_ops(false, false);
+	taos_disable_irq(false);
 	taos_wakelock_ops(&(taos_datap->proximity_wakelock), true);
 	if (0==queue_work(taos_datap->irq_work_queue, &taos_datap->irq_work)) {
 		pr_info("schedule_work failed!\n");
@@ -1967,7 +1971,7 @@ static int __devinit tmd2772_probe(struct i2c_client *clientp, const struct i2c_
 		return(ret);
 	}
 
-	taos_irq_ops(false, true);
+	taos_disable_irq(true);
 	INIT_DELAYED_WORK(&taos_datap->als_poll_work, taos_als_poll_work_func);
 	INIT_DELAYED_WORK(&taos_datap->prox_offset_cal_work, taos_prox_offset_cal_work_func);
 	INIT_DELAYED_WORK(&taos_datap->prox_flush_work, taos_flush_work_func);
@@ -2749,7 +2753,7 @@ static int taos_prox_on(void)
 		}
 	}
 	taos_prox_threshold_set();
-	taos_irq_ops(true, true);
+	taos_enable_irq();
 	return (ret);
 }
 
@@ -2778,7 +2782,7 @@ static int taos_prox_off(void)
 
 	// cancel_work_sync(&taos_datap->irq_work);
 	if (true == taos_datap->irq_enabled) {
-		taos_irq_ops(false, true);
+		taos_disable_irq(true);
 	}
 
 	return (ret);
