@@ -2309,7 +2309,8 @@ static int taos_prox_poll(struct taos_prox_info *prxp)
 	u8 chdata[6];
 
 	for (i = 0; i < 6; i++) {
-		chdata[i] = (i2c_smbus_read_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | TAOS_TRITON_CMD_AUTO | (TAOS_TRITON_ALS_CHAN0LO + i))));
+		chdata[i] = (i2c_smbus_read_byte_data(taos_datap->client,
+						      (TAOS_TRITON_CMD_REG | TAOS_TRITON_CMD_AUTO | (TAOS_TRITON_ALS_CHAN0LO + i))));
 	}
 	prxp->prox_clear = chdata[1];
 	prxp->prox_clear <<= 8;
