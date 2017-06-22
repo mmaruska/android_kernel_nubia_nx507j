@@ -1230,23 +1230,6 @@ static struct device_attribute attrs_light[] = {
     __ATTR(light_value,                    0444,   attr_get_als_value,                         NULL),
 };
 
-/*
-static struct device_attribute attributes[] = {
-#ifdef CONFIG_FEATURE_ZTEMT_SENSORS_LOG_ON
-	__ATTR(taos_als_adc_time,                   0644,   attr_get_als_adc_time,                      attr_set_als_adc_time),
-
-	__ATTR(taos_prox_calibrate,                 0644,   NULL,                                       attr_set_prox_calibrate),
-	__ATTR(taos_prox_calibrate_hi_param,        0644,   attr_get_prox_calibrate_hi_param,           attr_set_prox_calibrate_hi_param),
-	__ATTR(taos_prox_calibrate_lo_param,        0644,   attr_get_prox_calibrate_lo_param,           attr_set_prox_calibrate_lo_param),
-
-	__ATTR(th_hi,                               0644,   attr_get_threshold_hi,                      attr_set_threshold_hi),
-	__ATTR(th_low,                              0644,   attr_get_threshold_lo,                      attr_set_threshold_lo),
-};
-*/
-
-
-
-
 static struct device_attribute attrs_prox[] = {
     __ATTR(chip_name,                      0640,   attr_chip_name_show,                        NULL),
     __ATTR(enable,                         0640,   attr_prox_enable_show,                      attr_prox_enable_store),
