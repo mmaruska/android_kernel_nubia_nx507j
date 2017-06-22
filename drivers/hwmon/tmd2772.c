@@ -2295,7 +2295,7 @@ static int taos_device_name(unsigned char *bufp, char **device_name)
 // proximity poll
 static int taos_prox_poll(struct taos_prox_info *prxp)
 {
-	int i = 0, ret = 0; //wait_count = 0;
+	int i = 0;
 	u8 chdata[6];
 
 	for (i = 0; i < 6; i++) {
