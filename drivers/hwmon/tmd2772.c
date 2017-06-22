@@ -2577,31 +2577,24 @@ static void taos_prox_offset_cal_finish(void)
 		taos_prox_off();
 	}
 }
-static int taos_prox_offset_cal(void)
+
+static void taos_prox_offset_cal_work_func(struct work_struct *work)
 {
 	int ret = 0;
 	taos_datap->prox_offset_cal_result = false;
 
-	if ((ret=taos_prox_offset_cal_prepare())<0)
-		goto error;
+	if ((ret = taos_prox_offset_cal_prepare()) < 0)
+		goto exit;
 
 	mdelay(50);
 
-	if ((ret= taos_prox_offset_cal_process())>=0) {
+	if ((ret = taos_prox_offset_cal_process()) >= 0) {
 		taos_datap->prox_offset_cal_result = true;
 	}
 
 	taos_prox_offset_cal_finish();
-
-	return ret;
-error:
-	return ret;
-}
-
-
-static void taos_prox_offset_cal_work_func(struct work_struct *work)
-{
-	taos_prox_offset_cal();
+exit:
+	return; // ret;
 }
 
 static enum hrtimer_restart  taos_prox_unwakelock_work_func(struct hrtimer *timer)
