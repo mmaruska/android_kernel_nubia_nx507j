@@ -127,15 +127,15 @@ MODULE_DEVICE_TABLE(i2c, tmd2772_idtable);
 struct i2c_driver tmd2772_driver = {
 	.driver = {
 		.name = "ams-sensor-tmd2772",
-	.of_match_table = of_tmd2772_idtable,
+		.of_match_table = of_tmd2772_idtable,
 		//.pm = NULL,
 	},
 	.id_table = tmd2772_idtable_id,
 	.probe = tmd2772_probe,
 	.remove = __devexit_p(tmd2772_remove),
 #ifdef CONFIG_PM_SLEEP //by clli2
-    .resume = taos_resume,
-    .suspend = taos_suspend,
+        .resume = taos_resume,
+	.suspend = taos_suspend,
 #endif
 
 };
