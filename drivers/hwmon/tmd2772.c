@@ -1073,6 +1073,24 @@ static ssize_t attr_prox_init_show(struct device *dev,
 
 }
 
+
+static void compute_thresholds_from_level(int level)
+{
+	taos_datap->prox_uncover_data = level;
+	taos_datap->prox_thres_hi_min = level + PROX_THRESHOLD_SAFE_DISTANCE; /* = 300 */
+	taos_datap->prox_thres_hi_max = taos_datap->prox_thres_hi_min + PROX_THRESHOLD_DISTANCE / 2;
+	// limit:
+	taos_datap->prox_thres_hi_max = (taos_datap->prox_thres_hi_max > PROX_THRESHOLD_HIGH_MAX)
+		? PROX_THRESHOLD_HIGH_MAX : taos_datap->prox_thres_hi_max;
+
+	taos_datap->prox_thres_lo_min = level + PROX_THRESHOLD_DISTANCE; /* 100 */
+	taos_datap->prox_thres_lo_max = level + PROX_THRESHOLD_DISTANCE * 2;
+
+	dev_err(dev, "prox_uncover_data = %d\n", taos_datap->prox_uncover_data);
+	dev_err(dev, "prox_thres_hi range is [%d--%d]\n", taos_datap->prox_thres_hi_min, taos_datap->prox_thres_hi_max);
+	dev_err(dev, "prox_thres_lo range is [%d--%d]\n", taos_datap->prox_thres_lo_min, taos_datap->prox_thres_lo_max);
+}
+
 static ssize_t attr_prox_init_store(struct device *dev,
 				struct device_attribute *attr,
 				const char *buf, size_t size) {
@@ -1090,16 +1108,7 @@ static ssize_t attr_prox_init_store(struct device *dev,
 		}
 
 		if((ret=taos_read_cal_value(PATH_PROX_UNCOVER_DATA))>0) {
-			taos_datap->prox_uncover_data = ret;
-			taos_datap->prox_thres_hi_min = taos_datap->prox_uncover_data + PROX_THRESHOLD_SAFE_DISTANCE;
-			taos_datap->prox_thres_hi_max = taos_datap->prox_thres_hi_min + PROX_THRESHOLD_DISTANCE / 2;
-			taos_datap->prox_thres_hi_max = (taos_datap->prox_thres_hi_max > PROX_THRESHOLD_HIGH_MAX) ? PROX_THRESHOLD_HIGH_MAX : taos_datap->prox_thres_hi_max;
-			taos_datap->prox_thres_lo_min = taos_datap->prox_uncover_data + PROX_THRESHOLD_DISTANCE;
-			taos_datap->prox_thres_lo_max = taos_datap->prox_uncover_data + PROX_THRESHOLD_DISTANCE * 2;
-
-			dev_err(dev, "prox_uncover_data = %d\n", taos_datap->prox_uncover_data);
-			dev_err(dev, "prox_thres_hi range is [%d--%d]\n", taos_datap->prox_thres_hi_min, taos_datap->prox_thres_hi_max);
-			dev_err(dev, "prox_thres_lo range is [%d--%d]\n", taos_datap->prox_thres_lo_min, taos_datap->prox_thres_lo_max);
+			compute_thresholds_from_level(ret);
 		}
 
 		if((ret=taos_read_cal_value(CAL_THRESHOLD))<0) {
@@ -2432,16 +2441,8 @@ static int taos_prox_uncover_data_get(void)
 		goto error;
 	}
 
-	taos_datap->prox_uncover_data = prox_sum / j;
-	taos_datap->prox_thres_hi_min = taos_datap->prox_uncover_data + PROX_THRESHOLD_SAFE_DISTANCE;
-	taos_datap->prox_thres_hi_max = taos_datap->prox_thres_hi_min + PROX_THRESHOLD_DISTANCE / 2;
-	taos_datap->prox_thres_hi_max = (taos_datap->prox_thres_hi_max > PROX_THRESHOLD_HIGH_MAX) ? PROX_THRESHOLD_HIGH_MAX : taos_datap->prox_thres_hi_max;
-	taos_datap->prox_thres_lo_min = taos_datap->prox_uncover_data + PROX_THRESHOLD_DISTANCE;
-	taos_datap->prox_thres_lo_max = taos_datap->prox_uncover_data + PROX_THRESHOLD_DISTANCE * 2;
-
-	pr_err("prox_uncover_data = %d\n", taos_datap->prox_uncover_data);
-	pr_err("prox_thres_hi range is [%d--%d]\n", taos_datap->prox_thres_hi_min, taos_datap->prox_thres_hi_max);
-	pr_err("prox_thres_lo range is [%d--%d]\n", taos_datap->prox_thres_lo_min, taos_datap->prox_thres_lo_max);
+	/* the average: -- are we assuming the sensor is UNCOVERED?  */
+	compute_thresholds_from_level(prox_sum / j);
 	taos_write_cal_file(PATH_PROX_UNCOVER_DATA, taos_datap->prox_uncover_data);
 
 	return 0;
