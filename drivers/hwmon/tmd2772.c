@@ -2302,18 +2302,14 @@ static int taos_prox_poll(struct taos_prox_info *prxp)
 		chdata[i] = (i2c_smbus_read_byte_data(taos_datap->client,
 						      (TAOS_TRITON_CMD_REG | TAOS_TRITON_CMD_AUTO | (TAOS_TRITON_ALS_CHAN0LO + i))));
 	}
-	prxp->prox_clear = chdata[1];
-	prxp->prox_clear <<= 8;
-	prxp->prox_clear |= chdata[0];
+	prxp->prox_clear = (chdata[1] << 8) | chdata[0];
 	if (prxp->prox_clear > ((sat_als * 80) / 100)) {
 		pr_err("TAOS: %u <= %u*0.8 poll data\n", prxp->prox_clear, sat_als);
 		return -ENODATA;
 	}
-	prxp->prox_data = chdata[5];
-	prxp->prox_data <<= 8;
-	prxp->prox_data |= chdata[4];
-
-	return (ret);
+	// this is proximity:
+	prxp->prox_data = (chdata[5] << 8) | chdata[4];
+	return 0;
 }
 
 // prox poll timer function
