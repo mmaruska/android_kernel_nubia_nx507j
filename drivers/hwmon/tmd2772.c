@@ -45,15 +45,6 @@
 #define LOG_TAG "SENSOR_ALS_PROX"
 #define DEBUG_ON //DEBUG SWITCH
 
-// #define SENSOR_LOG_FILE__ strrchr(__FILE__, '/') ? (strrchr(__FILE__, '/')+1) : __FILE__
-
-// ZTEMT ADD by zhubing 2012-2-20 V8000/X501
-// added the work mode marco
-//#define WORK_UES_POLL_MODE
-// ZTEMT ADD by zhubing 2012-2-20 V8000/X501 END
-
-//#define IRQ_TRIGER_LEVEL_LOW
-
 struct taos_data;
 
 // forward declarations
