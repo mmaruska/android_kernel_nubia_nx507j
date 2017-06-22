@@ -1932,6 +1932,7 @@ static int __devinit tmd2772_probe(struct i2c_client *clientp, const struct i2c_
 	strlcpy(clientp->name, TAOS_DEVICE_ID, I2C_NAME_SIZE);
 	strlcpy(taos_datap->taos_name, TAOS_DEVICE_ID, TAOS_ID_NAME_SIZE);
 	taos_datap->valid = 0;
+	// mmc: where are attribs registered?
 	if (!(taos_cfgp = kmalloc(sizeof(struct taos_cfg), GFP_KERNEL))) {
 		pr_err("TAOS: kmalloc for struct taos_cfg failed in taos_probe()\n");
 		return -ENOMEM;
