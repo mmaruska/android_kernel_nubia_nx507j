@@ -337,7 +337,8 @@ static ssize_t attr_get_prox_led_pulse_cnt(struct device *dev,
 }
 
 // fixme: max_value!
-static inline int set_register(struct device *dev, const char *buf, size_t size, u8* out, int register_name)
+// fixme:  help string
+static inline int set_register_2complement(struct device *dev, const char *buf, size_t size, u8* out, int register_name)
 {
 	unsigned long val;	/* not int? */
 	int value;
@@ -361,7 +362,7 @@ static inline int set_register(struct device *dev, const char *buf, size_t size,
 static ssize_t attr_set_als_adc_time(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t size)
 {
-	return set_register(dev, buf, size, &taos_cfgp->prox_int_time, (TAOS_TRITON_CMD_REG|TAOS_TRITON_ALS_TIME));
+	return set_register_2complement(dev, buf, size, &taos_cfgp->prox_int_time, (TAOS_TRITON_CMD_REG|TAOS_TRITON_ALS_TIME));
 }
 
 static ssize_t attr_get_als_adc_time(struct device *dev,
@@ -373,7 +374,7 @@ static ssize_t attr_get_als_adc_time(struct device *dev,
 static ssize_t attr_set_prox_adc_time(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t size)
 {
-	return set_register(dev, buf, size, &taos_cfgp->prox_adc_time, (TAOS_TRITON_CMD_REG|TAOS_TRITON_PRX_TIME));
+	return set_register_2complement(dev, buf, size, &taos_cfgp->prox_adc_time, (TAOS_TRITON_CMD_REG|TAOS_TRITON_PRX_TIME));
 }
 
 static ssize_t attr_get_prox_adc_time(struct device *dev,
@@ -385,7 +386,7 @@ static ssize_t attr_get_prox_adc_time(struct device *dev,
 static ssize_t attr_set_wait_time(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t size)
 {
-	return set_register(dev, buf, size, /* taos_datap,*/ &taos_cfgp->prox_wait_time, (TAOS_TRITON_CMD_REG|TAOS_TRITON_WAIT_TIME));
+	return set_register_2complement(dev, buf, size, /* taos_datap,*/ &taos_cfgp->prox_wait_time, (TAOS_TRITON_CMD_REG|TAOS_TRITON_WAIT_TIME));
 }
 
 static ssize_t attr_get_wait_time(struct device *dev,
