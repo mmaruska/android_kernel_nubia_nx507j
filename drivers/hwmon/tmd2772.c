@@ -169,8 +169,6 @@ struct taos_data {
 
 	int  light_percent;
 
-	bool prox_offset_cal_verify;
-
 	int  prox_calibrate_times;
 	int  prox_thres_hi_max;
 	int  prox_thres_hi_min;
@@ -1176,26 +1174,6 @@ static ssize_t attr_prox_offset_cal_store(struct device *dev,
 	return size;
 }
 
-static ssize_t attr_prox_offset_cal_verify_show(struct device *dev,
-		struct device_attribute *attr, char *buf) {
-	return sprintf(buf, "%d", taos_datap->prox_offset_cal_verify);
-}
-
-static ssize_t attr_prox_offset_cal_verify_store(struct device *dev,
-		struct device_attribute *attr, const char *buf, size_t size) {
-	unsigned long val = 0;
-
-	dev_err(dev, "enter %s\n", __func__);
-	if (strict_strtoul(buf, 10, &val)) {
-		return -EINVAL;
-	}
-
-	taos_datap->prox_offset_cal_verify = val;
-
-	dev_err(dev, "exit\n");
-	return size;
-}
-
 static struct device_attribute attrs_light[] = {
     __ATTR(enable,                         0640,   attr_als_enable_show,                       attr_als_enable_store),
     __ATTR(light_gain,                     0644,   attr_get_als_gain,                          attr_set_als_gain),
@@ -1241,7 +1219,6 @@ static struct device_attribute attrs_prox[] = {
     __ATTR(prox_offset_cal_result,         0640,   attr_prox_offset_cal_result_show,            NULL),
     __ATTR(prox_data_safe_range_max,       0644,   attr_prox_data_safa_range_max_show,  NULL),
     __ATTR(prox_data_safe_range_min,       0644,   attr_prox_data_safa_range_min_show,  NULL),
-    __ATTR(prox_offset_cal_verify,         0644,   attr_prox_offset_cal_verify_show,     attr_prox_offset_cal_verify_store),
 };
 
 
@@ -1720,7 +1697,6 @@ static void tmd2772_data_init(struct taos_data *taos_datap)
 	taos_datap->chip_name = "tmd2772";
 	taos_datap->prox_calibrate_result = false;
 	taos_datap->prox_offset_cal_result = false;
-	taos_datap->prox_offset_cal_verify = true;
 	taos_datap->prox_thres_hi_max = PROX_THRESHOLD_HIGH_MAX;
 	taos_datap->prox_thres_hi_min = PROX_THRESHOLD_HIGH_MIN;
 	taos_datap->prox_data_max     = PROX_DATA_MAX;
