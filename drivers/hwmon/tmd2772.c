@@ -73,6 +73,7 @@ static int taos_resume(struct i2c_client *client);
 static int taos_suspend(struct i2c_client *client,pm_message_t mesg);
 //CLLI@
 
+static int taos_write_register(int register_number, u8 value);
 
 static int taos_sensors_als_poll_on(void);
 static int taos_sensors_als_poll_off(void);
@@ -357,8 +358,7 @@ static inline int set_register(struct device *dev, const char *buf, size_t size,
 	value = 255 - val;
 	*out = value;
 
-	if (i2c_smbus_write_byte_data(taos_datap->client, register_name,
-				      value) < 0) {
+	if (taos_write_register(register_name, value) < 0) {
 		dev_err(dev, "failed to write the wait_time reg\n");
 	}
 
@@ -1581,6 +1581,31 @@ static int write_threshold_registers(char *pro_buf)
 	return 0;
 }
 
+// todo:
+static int taos_write_register(int register_number, u8 value)
+{
+	// todo: have an array with the register names, and pr_error in this function!
+	return i2c_smbus_write_byte_data(taos_datap->client,
+					 TAOS_TRITON_CMD_REG | (TAOS_TRITON_CNTRL + register_number), value);
+}
+
+static u8 taos_read_register(int register_number)
+{
+	return i2c_smbus_read_byte_data(taos_datap->client,
+					TAOS_TRITON_CMD_REG | (TAOS_TRITON_CNTRL + register_number));
+}
+
+static int taos_read_doubleregister(int register_number)
+{
+	u8 b[2];
+	//(TAOS_TRITON_CMD_REG | TAOS_TRITON_CMD_WORD_BLK_RW | (TAOS_TRITON_ALS_CHAN0LO + i))));
+	b[0] = i2c_smbus_read_byte_data(taos_datap->client, TAOS_TRITON_CMD_REG | TAOS_TRITON_CMD_WORD_BLK_RW
+					| register_number);
+	b[1] =  i2c_smbus_read_byte_data(taos_datap->client, TAOS_TRITON_CMD_REG | TAOS_TRITON_CMD_WORD_BLK_RW
+					 | (register_number + 1));
+	return b[0] + b[1]*256; //
+}
+
 static int taos_prox_threshold_set(struct taos_data *taos_datap)
 {
 	static char pro_buf[4]; //iVIZM
@@ -1843,7 +1868,7 @@ static int tmd2772_chip_detect(struct taos_data *chip)
 	int detect_max_times = 10;
 
 	for (i=0; i<detect_max_times; i++) {
-		chip_id = i2c_smbus_read_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG | (TAOS_TRITON_CNTRL + TAOS_TRITON_CHIPID)));
+		chip_id = taos_read_register(TAOS_TRITON_CHIPID);
 
 		if (chip_id == 0x39) {
 			break;
@@ -2366,12 +2391,16 @@ static void taos_als_poll_work_func(struct work_struct *work)
 	}
 }
 
+// temporarily disable?
 static int taos_prox_offset_cal_prepare(void)
 {
 	int ret =1;
 	if (NULL!=taos_cfgp) {
 		taos_cfgp->prox_config_offset = 0;
-		if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|TAOS_TRITON_PRX_OFFSET), taos_cfgp->prox_config_offset))) < 0) {
+
+		/* reset the offset (calibrated with no glass on top) */
+		if ((ret = taos_write_register(TAOS_TRITON_PRX_OFFSET, 0)) < 0) {
+			// todo: have an array with the register names, and pr_error in this function!
 			pr_err("failed to write the prox_config_offset  reg\n");
 			return ret;
 		}
