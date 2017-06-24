@@ -180,8 +180,6 @@ struct taos_data {
 	int  prox_data_max;
 	int  prox_manual_calibrate_threshold;
 	int  irq_pin_num;
-	int  prox_led_plus_cnt;
-	int  prox_offset_cal_ability;
 	int  prox_offset_cal_per_bit;
 	int  prox_uncover_data;
 
@@ -1709,18 +1707,23 @@ static int tmd2772_parse_dt(struct taos_data *chip)
 {
 	int rc = 0;
 	u32 tmp;
+	int prox_offset_cal_ability, prox_led_plus_cnt;
 	struct device_node *np = chip->client->dev.of_node;
 
 	chip->irq_pin_num = of_get_named_gpio(np, "ams,irq-gpio", 0);
 	pr_info("irq_pin_num is %d\n",chip->irq_pin_num);
 
 	rc = of_property_read_u32(np, "ams,prox-offset-cal-ability-tmd2772", &tmp);
-	chip->prox_offset_cal_ability = (!rc ? tmp : 8);
-	pr_info("prox_offset_cal_ability is %d\n", chip->prox_offset_cal_ability);
+
+	prox_offset_cal_ability = (!rc ? tmp : 8);
+	pr_info("prox_offset_cal_ability is %d\n", prox_offset_cal_ability);
 
 	rc = of_property_read_u32(np, "ams,prox-led-plus-cnt-tmd2772", &tmp);
-	chip->prox_led_plus_cnt = (!rc ? tmp : 8);
-	pr_info("prox_led_plus_cnt is %d\n", chip->prox_led_plus_cnt);
+	prox_led_plus_cnt = (!rc ? tmp : 8);
+	pr_info("prox_led_plus_cnt is %d\n", prox_led_plus_cnt);
+
+	taos_datap->prox_offset_cal_per_bit = prox_offset_cal_ability * prox_led_plus_cnt;
+
 
 	rc = of_property_read_u32(np, "ams,light-percent", &tmp);
 	chip->light_percent = (!rc ? tmp : 100);
@@ -1745,7 +1748,6 @@ static void tmd2772_data_init(struct taos_data *taos_datap)
 	taos_datap->prox_thres_hi_max = PROX_THRESHOLD_HIGH_MAX;
 	taos_datap->prox_thres_hi_min = PROX_THRESHOLD_HIGH_MIN;
 	taos_datap->prox_data_max     = PROX_DATA_MAX;
-	taos_datap->prox_offset_cal_per_bit = taos_datap->prox_offset_cal_ability * taos_datap->prox_led_plus_cnt;
 	taos_datap->prox_uncover_data = 0;
 	taos_datap->prox_calibrate_times = 10;
 	taos_datap->prox_calibrate_flag = true;//true :auto_calibrate,false :manual_calibrate
