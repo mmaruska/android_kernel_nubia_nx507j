@@ -1560,6 +1560,27 @@ static int taos_als_get_data(void)//iVIZM
 	return ret;
 }
 
+static int write_threshold_registers(char *pro_buf)
+{
+	int mcount = 0;
+	int ret = 0;
+	pr_debug("programming threshold: hi = %d, low = %d\n",
+		 pro_buf[0] + (pro_buf[1] << 8),
+		 pro_buf[2] + (pro_buf[3] << 8));
+
+	for (mcount = 0; mcount < 4; mcount++ ) {
+		// mmc:  repeated byte protocol tx: will read
+		// TAOS_TRITON_CMD_BYTE_RW
+		if ((ret = (i2c_smbus_write_byte_data(taos_datap->client,
+						      ((TAOS_TRITON_CMD_REG | TAOS_TRITON_PRX_MINTHRESHLO) + mcount),
+						      pro_buf[mcount]))) < 0) {
+			pr_err("TAOS: i2c_smbus_write_byte_data failed in taos prox threshold set\n");
+			return (ret);
+		}
+	}
+	return 0;
+}
+
 static int taos_prox_threshold_set(struct taos_data *taos_datap)
 {
 	static char pro_buf[4]; //iVIZM
@@ -1580,13 +1601,8 @@ static int taos_prox_threshold_set(struct taos_data *taos_datap)
 		pro_buf[2] = 0xff;
 		pro_buf[3] = 0xff;
 
-		for( mcount=0; mcount<4; mcount++) {
-			// mmc:
-			if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x08) + mcount, pro_buf[mcount]))) < 0) {
-				pr_err("TAOS: i2c_smbus_write_byte_data failed in taos prox threshold set\n");
-				return (ret);
-			}
-		}
+		if ((ret = write_threshold_registers(pro_buf)) < 0)
+			return ret;
 
 		if (pro_ft) {
 			pr_info("init the prox threshold");
@@ -1651,13 +1667,8 @@ static int taos_prox_threshold_set(struct taos_data *taos_datap)
 
 	input_sync(taos_datap->p_idev);
 
-	for( mcount=0; mcount<4; mcount++) {
-		if ((ret = (i2c_smbus_write_byte_data(taos_datap->client, (TAOS_TRITON_CMD_REG|0x08) + mcount, pro_buf[mcount]))) < 0) {
-			pr_err("TAOS: i2c_smbus_write_byte_data failed in taos prox threshold set\n");
-			return (ret);
-		}
-	}
-
+	if ((ret = write_threshold_registers(pro_buf)) < 0)
+			return ret;
 	return ret;
 }
 
