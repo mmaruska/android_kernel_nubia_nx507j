@@ -839,7 +839,7 @@ inline int avc_audit(u32 ssid, u32 tsid,
 		    a->selinux_audit_data->auditdeny &&
 		    !(a->selinux_audit_data->auditdeny & avd->auditdeny))
 			audited = 0;
-			if (force_audit) audited = 1;
+		if (force_audit) audited = 1;
 	} else if (result)
 		audited = denied = requested;
 	else

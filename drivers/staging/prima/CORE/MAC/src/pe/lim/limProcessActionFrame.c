@@ -1517,11 +1517,11 @@ tANI_U8 *pBody;
         goto returnAfterError;
     }
     if (0 == frmAddBARsp.AddBAParameterSet.bufferSize)
-        frmAddBARsp.AddBAParameterSet.bufferSize = val;
+	    frmAddBARsp.AddBAParameterSet.bufferSize = val;
     else
-        frmAddBARsp.AddBAParameterSet.bufferSize =
+	    frmAddBARsp.AddBAParameterSet.bufferSize =
                     VOS_MIN(val, frmAddBARsp.AddBAParameterSet.bufferSize);
-        limLog( pMac, LOG1,
+    limLog( pMac, LOG1,
             FL( "ADDBA RSP  Buffsize = %d" ),
             frmAddBARsp.AddBAParameterSet.bufferSize);
     // Now, validate the ADDBA Rsp

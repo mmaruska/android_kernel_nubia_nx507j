@@ -574,6 +574,8 @@ static void __program_context(struct msm_iommu_drvdata *iommu_drvdata,
 	unsigned int ctx = ctx_drvdata->num;
 	phys_addr_t pgtable = __pa(priv->pt.fl_table);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshift-overflow"
 	__reset_context(base, ctx);
 
 	pn = pgtable >> CB_TTBR0_ADDR_SHIFT;
@@ -610,6 +612,7 @@ static void __program_context(struct msm_iommu_drvdata *iommu_drvdata,
 		SET_CB_TTBR0_IRGN0(base, ctx, 1);
 		SET_CB_TTBR0_RGN(base, ctx, 1);   /* WB, WA */
 	}
+#pragma GCC diagnostic pop
 
 	if (!is_secure) {
 		if (program_m2v)

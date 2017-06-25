@@ -638,8 +638,9 @@ static struct lsm_client *q6lsm_get_lsm_client(int session_id)
 	unsigned long flags;
 	struct lsm_client *client = NULL;
 
-	if (session_id == LSM_CONTROL_SESSION) {
-		client = &lsm_common.common_client[session_id];
+	if (session_id == LSM_CONTROL_SESSION) { /* fixme! */
+		// this takes from COMMON!
+		client = 0; // &lsm_common.common_client[session_id];
 		goto done;
 	}
 
