@@ -1324,7 +1324,7 @@ error_open:
 	return res;
 }
 
-
+// reads in  1 int value from file
 static int taos_read_cal_value(char *file_path)
 {
 	int res = -1;
@@ -1430,7 +1430,7 @@ static irqreturn_t taos_irq_handler(int irq, void *dev_id)
 }
 
 // after IRQ, the work issues this: so we read the TRITON STATUS
-// but this ignores the content: 
+// but this ignores the content:
 static int taos_get_data(void)
 {
 	int ret = 0;
@@ -1577,8 +1577,6 @@ static int taos_read_doubleregister(int register_number)
 	return b[0] + b[1]*256; //
 }
 
-
-
 static int taos_prox_threshold_set(struct taos_data *taos_datap)
 {
 	char pro_buf[4];	/* static, so cannot be used in parallel! */
@@ -1597,11 +1595,12 @@ static int taos_prox_threshold_set(struct taos_data *taos_datap)
 	proxdata = chdata[4] + chdata[5]*256;
 
 	if (pro_ft || flag_prox_debug) { /* mmc? so the first time? this means it will generate IRQ all the time? */
+
+		// why?
 		pro_buf[0] = 0xff;
 		pro_buf[1] = 0xff;
 		pro_buf[2] = 0xff;
 		pro_buf[3] = 0xff;
-
 		if ((ret = write_threshold_registers(pro_buf)) < 0)
 			return ret;
 
@@ -1616,9 +1615,11 @@ static int taos_prox_threshold_set(struct taos_data *taos_datap)
 		}
 		pro_ft = false;	/* why? */
 	} else {
+		pr_debug("%s: %d", __func__, proxdata);
 		if (proxdata < taos_cfgp->prox_threshold_lo)
 		{   //FAR
 			// mmc: does this say the limit ... edge-interrupt?
+			// So now below threshold_lo -> so LOW, next IRQ I want when _outside_ <0.... threshold_hi> interval:
 			pro_buf[0] = 0x0;
 			pro_buf[1] = 0x0;
 			pro_buf[2] = taos_cfgp->prox_threshold_hi & 0x0ff;
@@ -1640,7 +1641,9 @@ static int taos_prox_threshold_set(struct taos_data *taos_datap)
 				pr_info("Near!!! proxdata = %d, hi = %d, low = %d\n", proxdata, taos_cfgp->prox_threshold_hi, taos_cfgp->prox_threshold_lo);
 				input_report_rel(taos_datap->p_idev, REL_X, proxdata);
 			} else {
-				if( (taos_cfgp->prox_threshold_hi-proxdata) > (proxdata-taos_cfgp->prox_threshold_lo)) {
+				// this is interesting: IRQ, but now the value contradicts it!
+				// look which is nearer: lo or hi?
+				if( (taos_cfgp->prox_threshold_hi - proxdata) > (proxdata - taos_cfgp->prox_threshold_lo)) {
 					//FAR
 					pro_buf[0] = 0x0;
 					pro_buf[1] = 0x0;
@@ -1767,7 +1770,7 @@ static int tmd2772_power_off(struct taos_data *chip)
 static int tmd2772_power_on(struct taos_data *chip)
 {
 	int rc = 0;
-	pr_info("on");
+	pr_info("%s", __func__);
 
 	chip->vdd = regulator_get(&chip->client->dev,"vdd");
 	if(IS_ERR(chip->vdd)) {
@@ -2279,6 +2282,7 @@ static int taos_device_name(unsigned char *bufp, char **device_name)
 }
 
 // proximity poll
+// read
 static int taos_prox_poll(struct taos_prox_info *prxp)
 {
 	int i = 0;
@@ -2400,16 +2404,17 @@ static int taos_prox_offset_calculate(int data, int target)
 	return offset;
 }
 
+// mmc: wrong name
 static int taos_prox_uncover_data_get(void)
 {
 	u8 i = 0, j = 0;
 	int prox_sum = 0, ret = 0;
 	static struct taos_prox_info prox_info_temp;
 
-	mdelay(20);
+	mdelay(20);		/* mmc: why? */
 	for (i = 0, j = 0; i < PROX_OFFSET_CAL_BUFFER_SIZE / 5; i++) {
 		if ((ret = taos_prox_poll(&prox_info_temp)) < 0) {
-			pr_err("failed to tmd2772_prox_read_data\n");
+			pr_err("failed to tmd2772_prox_read_data\n"); /* ignores */
 		} else {
 			j++;
 			prox_sum += prox_info_temp.prox_data;
@@ -2428,7 +2433,6 @@ static int taos_prox_uncover_data_get(void)
 	taos_write_cal_file(PATH_PROX_UNCOVER_DATA, taos_datap->prox_uncover_data);
 
 	return 0;
-
 error:
 	return ret;
 }
@@ -2542,9 +2546,6 @@ static int taos_prox_offset_cal_process(void)
 		}
 	}
 
-
-
-
 	kfree(prox_cal_info);
 	return 1;
 prox_calibrate_offset_error:
@@ -2555,6 +2556,7 @@ prox_offset_cal_buffer_error:
 	return -1;
 }
 
+// re-enable:
 static void taos_prox_offset_cal_finish(void)
 {
 
@@ -2565,6 +2567,7 @@ static void taos_prox_offset_cal_finish(void)
 	}
 }
 
+// calibration?
 static void taos_prox_offset_cal_work_func(struct work_struct *work)
 {
 	int ret = 0;
@@ -2590,7 +2593,6 @@ static enum hrtimer_restart  taos_prox_unwakelock_work_func(struct hrtimer *time
 	if(false == taos_datap->irq_work_status )
 		taos_wakelock_unlock(&(taos_datap->proximity_wakelock));
 	return HRTIMER_NORESTART;
-
 }
 
 static int taos_sensors_als_poll_on(void)
