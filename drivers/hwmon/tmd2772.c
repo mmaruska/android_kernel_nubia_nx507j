@@ -1086,9 +1086,9 @@ static void compute_thresholds_from_level(int level)
 	taos_datap->prox_thres_lo_min = level + PROX_THRESHOLD_DISTANCE; /* 100 */
 	taos_datap->prox_thres_lo_max = level + PROX_THRESHOLD_DISTANCE * 2;
 
-	dev_err(dev, "prox_uncover_data = %d\n", taos_datap->prox_uncover_data);
-	dev_err(dev, "prox_thres_hi range is [%d--%d]\n", taos_datap->prox_thres_hi_min, taos_datap->prox_thres_hi_max);
-	dev_err(dev, "prox_thres_lo range is [%d--%d]\n", taos_datap->prox_thres_lo_min, taos_datap->prox_thres_lo_max);
+	dev_err(taos_datap->proximity_dev, "prox_uncover_data = %d\n", taos_datap->prox_uncover_data);
+	dev_err(taos_datap->proximity_dev, "prox_thres_hi range is [%d--%d]\n", taos_datap->prox_thres_hi_min, taos_datap->prox_thres_hi_max);
+	dev_err(taos_datap->proximity_dev, "prox_thres_lo range is [%d--%d]\n", taos_datap->prox_thres_lo_min, taos_datap->prox_thres_lo_max);
 }
 
 static ssize_t attr_prox_init_store(struct device *dev,
