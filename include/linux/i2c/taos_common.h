@@ -47,8 +47,10 @@ struct taos_cfg {
 	u8	filter_history;
 	u8	filter_count;
 	u8	gain;
+	/* so what is this? */
 	u16	prox_threshold_hi;
 	u16	prox_threshold_lo;
+
 	u16	als_threshold_hi;
 	u16	als_threshold_lo;
 	u8	prox_int_time;
