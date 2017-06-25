@@ -1507,7 +1507,7 @@ static void *def_taiko_mbhc_cal(void)
 	S(v_btn_press_delta_sta, 100);
 	S(v_btn_press_delta_cic, 50);
 #undef S
-	btn_cfg = WCD9XXX_MBHC_CAL_BTN_DET_PTR(taiko_cal);
+	btn_cfg = WCD9XXX_MBHC_CAL_BTN_DET_PTR(taiko_cal); /* some array element */
 	btn_low = wcd9xxx_mbhc_cal_btn_det_mp(btn_cfg, MBHC_BTN_DET_V_BTN_LOW);
 	btn_high = wcd9xxx_mbhc_cal_btn_det_mp(btn_cfg,
 					       MBHC_BTN_DET_V_BTN_HIGH);
